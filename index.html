@@ -608,7 +608,7 @@
             </div>
             <div class="word-card">
                 <p id="test-english-word" style="font-size: 2.2em; color: #00BFA5;"></p>
-                <button class="listen-button" onclick="playCurrentTestWordSoundForDisplay()">Dinle 🔊</button>
+                <button class="listen-button" onclick="playCurrentTestWordSound()">Dinle 🔊</button>
             </div>
             <div class="test-options" id="test-options">
                 </div>
@@ -630,16 +630,583 @@
     </div>
 
     <script>
-        /* JavaScript Başlangıcı */
-
         let currentWordIndex = 0;
-        let speechVolume = 1; // Varsayılan ses seviyesi
-        let currentTopicWords = []; // Seçilen konunun kelimeleri
-        let selectedTopic = null; // Seçilen konuyu tutar
+        let speechVolume = 1; 
+        let currentTopicWords = []; 
+        let selectedTopic = null; 
 
         // Konulara ayrılmış kelime listesi ve ek bilgiler
         const topics = [
             {
                 name: "Greetings & Basics",
                 words: [
-         
+                    { english: "Hello", turkish: "Merhaba", examples: ["Hello, my name is Alex.", "Hello, how are you?"], grammar: "Selamlaşma ifadeleri." },
+                    { english: "Goodbye", turkish: "Güle güle", examples: ["Goodbye, see you tomorrow.", "Goodbye, have a nice day."], grammar: "" },
+                    { english: "Please", turkish: "Lütfen", examples: ["Please sit down.", "Can I have some water, please?"], grammar: "" },
+                    { english: "Thank you", turkish: "Teşekkür ederim", examples: ["Thank you for your help.", "Thank you, that's kind."], grammar: "" },
+                    { english: "Yes", turkish: "Evet", examples: ["Yes, I can.", "Yes, it is."], grammar: "" },
+                    { english: "No", turkish: "Hayır", examples: ["No, I cannot.", "No, it is not."], grammar: "" },
+                    { english: "Good morning", turkish: "Günaydın", examples: ["Good morning, class.", "Good morning, Mom."], grammar: "" },
+                    { english: "Good afternoon", turkish: "Tünaydın", examples: ["Good afternoon, friends."], grammar: "" },
+                    { english: "Good evening", turkish: "İyi akşamlar", examples: ["Good evening, everyone."], grammar: "" },
+                    { english: "Good night", turkish: "İyi geceler", examples: ["Good night, sleep tight."], grammar: "" },
+                    { english: "How are you?", turkish: "Nasılsın?", examples: ["How are you, John?", "I'm fine, thank you."], grammar: "Soru sorma." },
+                    { english: "I am fine", turkish: "İyiyim", examples: ["I am fine, thank you.", "I am fine, how about you?"], grammar: "Kendini ifade etme: I am..." },
+                    { english: "What is your name?", turkish: "Adın ne?", examples: ["What is your name, please?", "My name is Lily."], grammar: "Soru sorma." },
+                    { english: "My name is...", turkish: "Benim adım...", examples: ["My name is Alex.", "My name is Daisy."], grammar: "Kendini tanıtma." },
+                    { english: "Nice to meet you", turkish: "Tanıştığıma memnun oldum", examples: ["Nice to meet you, too."], grammar: "" }
+                ]
+            },
+            {
+                name: "Numbers (1-20)",
+                words: [
+                    { english: "One", turkish: "Bir", examples: ["One apple.", "I have one brother."], grammar: "" },
+                    { english: "Two", turkish: "İki", examples: ["Two dogs.", "She has two sisters."], grammar: "" },
+                    { english: "Three", turkish: "Üç", examples: ["Three books.", "We are three friends."], grammar: "" },
+                    { english: "Four", turkish: "Dört", examples: ["Four cats.", "There are four chairs."], grammar: "" },
+                    { english: "Five", turkish: "Beş", examples: ["Five fingers.", "I see five birds."], grammar: "" },
+                    { english: "Six", turkish: "Altı", examples: ["Six pencils.", "They eat six cookies."], grammar: "" },
+                    { english: "Seven", turkish: "Yedi", examples: ["Seven days.", "He is seven years old."], grammar: "" },
+                    { english: "Eight", turkish: "Sekiz", examples: ["Eight toys.", "There are eight students."], grammar: "" },
+                    { english: "Nine", turkish: "Dokuz", examples: ["Nine flowers.", "She has nine marbles."], grammar: "" },
+                    { english: "Ten", turkish: "On", examples: ["Ten fingers and toes.", "We have ten books."], grammar: "" },
+                    { english: "Eleven", turkish: "On bir", examples: ["Eleven balloons."], grammar: "" },
+                    { english: "Twelve", turkish: "On iki", examples: ["Twelve months."], grammar: "" },
+                    { english: "Thirteen", turkish: "On üç", examples: ["Thirteen candies."], grammar: "" },
+                    { english: "Fourteen", turkish: "On dört", examples: ["Fourteen apples."], grammar: "" },
+                    { english: "Fifteen", turkish: "On beş", examples: ["Fifteen birds."], grammar: "" },
+                    { english: "Sixteen", turkish: "On altı", examples: ["Sixteen children."], grammar: "" },
+                    { english: "Seventeen", turkish: "On yedi", examples: ["Seventeen oranges."], grammar: "" },
+                    { english: "Eighteen", turkish: "On sekiz", examples: ["Eighteen stars."], grammar: "" },
+                    { english: "Nineteen", turkish: "On dokuz", examples: ["Nineteen pencils."], grammar: "" },
+                    { english: "Twenty", turkish: "Yirmi", examples: ["Twenty students in the class."], grammar: "" }
+                ]
+            },
+            {
+                name: "Colors",
+                words: [
+                    { english: "Red", turkish: "Kırmızı", examples: ["The apple is red.", "I like red cars."], grammar: "" },
+                    { english: "Blue", turkish: "Mavi", examples: ["The sky is blue.", "My favorite color is blue."], grammar: "" },
+                    { english: "Green", turkish: "Yeşil", examples: ["The grass is green.", "I have a green ball."], grammar: "" },
+                    { english: "Yellow", turkish: "Sarı", examples: ["The sun is yellow.", "I see a yellow flower."], grammar: "" },
+                    { english: "Black", turkish: "Siyah", examples: ["My cat is black.", "The night is black."], grammar: "" },
+                    { english: "White", turkish: "Beyaz", examples: ["The snow is white.", "I have a white shirt."], grammar: "" },
+                    { english: "Orange", turkish: "Turuncu", examples: ["The orange is orange.", "I like orange juice."], grammar: "" },
+                    { english: "Purple", turkish: "Mor", examples: ["This flower is purple.", "She likes purple dresses."], grammar: "" },
+                    { english: "Pink", turkish: "Pembe", examples: ["My bag is pink.", "She has a pink toy."], grammar: "" },
+                    { english: "Brown", turkish: "Kahverengi", examples: ["The tree is brown.", "My shoes are brown."], grammar: "" },
+                    { english: "Grey", turkish: "Gri", examples: ["The elephant is grey.", "The clouds are grey."], grammar: "" }
+                ]
+            },
+            {
+                name: "Family Members",
+                words: [
+                    { english: "Family", turkish: "Aile", examples: ["I love my family.", "We are a happy family."], grammar: "" },
+                    { english: "Mother", turkish: "Anne", examples: ["My mother is kind.", "She is my mother."], grammar: "" },
+                    { english: "Father", turkish: "Baba", examples: ["My father is strong.", "He is my father."], grammar: "" },
+                    { english: "Brother", turkish: "Erkek kardeş", examples: ["I have one brother.", "My brother is tall."], grammar: "" },
+                    { english: "Sister", turkish: "Kız kardeş", examples: ["She has two sisters.", "My sister is short."], grammar: "" },
+                    { english: "Grandfather", turkish: "Büyükbaba", examples: ["My grandfather is old.", "He visits us."], grammar: "" },
+                    { english: "Grandmother", turkish: "Büyükanne", examples: ["My grandmother bakes cookies.", "She tells stories."], grammar: "" },
+                    { english: "Son", turkish: "Erkek evlat", examples: ["He is my son.", "They have a son."], grammar: "" },
+                    { english: "Daughter", turkish: "Kız evlat", examples: ["She is my daughter.", "They have a daughter."], grammar: "" }
+                ]
+            },
+            {
+                name: "Animals",
+                words: [
+                    { english: "Cat", turkish: "Kedi", examples: ["I have a cat.", "The cat sleeps a lot."], grammar: "" },
+                    { english: "Dog", turkish: "Köpek", examples: ["My dog is playful.", "Dogs bark."], grammar: "" },
+                    { english: "Bird", turkish: "Kuş", examples: ["A bird is singing.", "Birds can fly."], grammar: "" },
+                    { english: "Fish", turkish: "Balık", examples: ["I like to eat fish.", "Fish live in water."], grammar: "" },
+                    { english: "Elephant", turkish: "Fil", examples: ["An elephant is big.", "Elephants have long noses."], grammar: "" },
+                    { english: "Lion", turkish: "Aslan", examples: ["A lion is a wild animal.", "Lions roar."], grammar: "" },
+                    { english: "Tiger", turkish: "Kaplan", examples: ["Tigers are fast.", "I saw a tiger at the zoo."], grammar: "" },
+                    { english: "Monkey", turkish: "Maymun", examples: ["Monkeys like bananas.", "Monkeys can climb trees."], grammar: "" },
+                    { english: "Bear", turkish: "Ayı", examples: ["Bears sleep in winter.", "A bear is a big animal."], grammar: "" },
+                    { english: "Rabbit", turkish: "Tavşan", examples: ["A rabbit eats carrots.", "Rabbits are fast."], grammar: "" }
+                ]
+            },
+            {
+                name: "Food & Drinks",
+                words: [
+                    { english: "Food", turkish: "Yemek", examples: ["I like healthy food.", "What's your favorite food?"], grammar: "" },
+                    { english: "Water", turkish: "Su", examples: ["Drink water every day.", "I need a glass of water."], grammar: "" },
+                    { english: "Milk", turkish: "Süt", examples: ["I drink milk every morning.", "Milk is good for bones."], grammar: "" },
+                    { english: "Bread", turkish: "Ekmek", examples: ["I eat bread with cheese.", "Can you buy some bread?"], grammar: "" },
+                    { english: "Apple", turkish: "Elma", examples: ["An apple a day keeps the doctor away.", "I like red apples."], grammar: "" },
+                    { english: "Banana", turkish: "Muz", examples: ["Monkeys like bananas.", "I eat a banana for breakfast."], grammar: "" },
+                    { english: "Orange", turkish: "Portakal", examples: ["Oranges are juicy.", "I drink orange juice."], grammar: "" },
+                    { english: "Chicken", turkish: "Tavuk", examples: ["I like fried chicken.", "We eat chicken for dinner."], grammar: "" },
+                    { english: "Fish", turkish: "Balık", examples: ["I eat fish on Fridays.", "Fish is healthy."], grammar: "" },
+                    { english: "Rice", turkish: "Pirinç", examples: ["I like rice with chicken.", "Do you eat rice?"], grammar: "" }
+                ]
+            },
+            {
+                name: "Body Parts",
+                words: [
+                    { english: "Head", turkish: "Kafa", examples: ["I have a head.", "My head hurts."], grammar: "" },
+                    { english: "Eye", turkish: "Göz", examples: ["I have two eyes.", "My eyes are blue."], grammar: "" },
+                    { english: "Nose", turkish: "Burun", examples: ["I have one nose.", "My nose is small."], grammar: "" },
+                    { english: "Ear", turkish: "Kulak", examples: ["I have two ears.", "Listen with your ears."], grammar: "" },
+                    { english: "Mouth", turkish: "Ağız", examples: ["Open your mouth.", "I eat with my mouth."], grammar: "" },
+                    { english: "Arm", turkish: "Kol", examples: ["I have two arms.", "Lift your arms."], grammar: "" },
+                    { english: "Hand", turkish: "El", examples: ["I have two hands.", "Wash your hands."], grammar: "" },
+                    { english: "Finger", turkish: "Parmak", examples: ["I have ten fingers.", "Point with your finger."], grammar: "" },
+                    { english: "Leg", turkish: "Bacak", examples: ["I have two legs.", "Run with your legs."], grammar: "" },
+                    { english: "Foot", turkish: "Ayak", examples: ["I have two feet.", "Wear shoes on your feet."], grammar: "" }
+                ]
+            },
+            {
+                name: "Classroom Objects",
+                words: [
+                    { english: "Book", turkish: "Kitap", examples: ["I read a book.", "This is my book."], grammar: "" },
+                    { english: "Pencil", turkish: "Kurşun kalem", examples: ["I write with a pencil.", "Give me your pencil."], grammar: "" },
+                    { english: "Pen", turkish: "Tükenmez kalem", examples: ["This is a blue pen.", "I need a pen."], grammar: "" },
+                    { english: "Eraser", turkish: "Silgi", examples: ["I use an eraser.", "Don't forget your eraser."], grammar: "" },
+                    { english: "Ruler", turkish: "Cetvel", examples: ["Use a ruler to draw a line.", "My ruler is long."], grammar: "" },
+                    { english: "Bag", turkish: "Çanta", examples: ["This is my school bag.", "Put your books in your bag."], grammar: "" },
+                    { english: "Chair", turkish: "Sandalye", examples: ["Sit on the chair.", "The chair is red."], grammar: "" },
+                    { english: "Table", turkish: "Masa", examples: ["Put the book on the table.", "We study at the table."], grammar: "" },
+                    { english: "Board", turkish: "Tahta", examples: ["The teacher writes on the board.", "Look at the board."], grammar: "" },
+                    { english: "Window", turkish: "Pencere", examples: ["Open the window.", "The window is clean."], grammar: "" },
+                    { english: "Door", turkish: "Kapı", examples: ["Close the door.", "The door is open."], grammar: "" }
+                ]
+            },
+            {
+                name: "Action Verbs",
+                words: [
+                    { english: "Run", turkish: "Koşmak", examples: ["I can run fast.", "Let's run together."], grammar: "" },
+                    { english: "Walk", turkish: "Yürümek", examples: ["I walk to school.", "Let's go for a walk."], grammar: "" },
+                    { english: "Eat", turkish: "Yemek yemek", examples: ["I eat an apple.", "What do you want to eat?"], grammar: "" },
+                    { english: "Drink", turkish: "İçmek", examples: ["I drink water.", "Do you drink milk?"], grammar: "" },
+                    { english: "Sleep", turkish: "Uyumak", examples: ["I sleep at night.", "Cats sleep a lot."], grammar: "" },
+                    { english: "Play", turkish: "Oynamak", examples: ["I play with my friends.", "Let's play a game."], grammar: "" },
+                    { english: "Read", turkish: "Okumak", examples: ["I read a book.", "Can you read this?"], grammar: "" },
+                    { english: "Write", turkish: "Yazmak", examples: ["I write my name.", "Write a letter."], grammar: "" },
+                    { english: "Sing", turkish: "Şarkı söylemek", examples: ["I like to sing.", "Can you sing a song?"], grammar: "" },
+                    { english: "Draw", turkish: "Çizmek", examples: ["I draw a cat.", "Let's draw a picture."], grammar: "" },
+                    { english: "Jump", turkish: "Zıplamak", examples: ["Rabbits can jump.", "Jump high!"], grammar: "" },
+                    { english: "Sit", turkish: "Oturmak", examples: ["Sit down, please.", "I sit on the chair."], grammar: "" },
+                    { english: "Stand", turkish: "Ayakta durmak", examples: ["Stand up, please.", "I stand next to the table."], grammar: "" }
+                ]
+            },
+            {
+                name: "Simple Sentences & Questions",
+                words: [
+                    { english: "This is...", turkish: "Bu...", examples: ["This is a book.", "This is my friend."], grammar: "'This is' tekil nesneleri göstermek için kullanılır." },
+                    { english: "That is...", turkish: "Şu...", examples: ["That is a car.", "That is my house."], grammar: "'That is' uzaktaki tekil nesneleri göstermek için kullanılır." },
+                    { english: "These are...", turkish: "Bunlar...", examples: ["These are my pencils.", "These are apples."], grammar: "'These are' yakınındaki çoğul nesneleri göstermek için kullanılır." },
+                    { english: "Those are...", turkish: "Şunlar...", examples: ["Those are birds.", "Those are big trees."], grammar: "'Those are' uzaktaki çoğul nesneleri göstermek için kullanılır." },
+                    { english: "What is this?", turkish: "Bu nedir?", examples: ["What is this? It is a pen."], grammar: "Soru sorma: 'What' (ne) nesneler için kullanılır." },
+                    { english: "What is that?", turkish: "Şu nedir?", examples: ["What is that? It is a dog."], grammar: "" },
+                    { english: "Is it a cat?", turkish: "Bu bir kedi mi?", examples: ["Is it a cat? Yes, it is.", "Is it a cat? No, it isn't."], grammar: "Evet/Hayır soruları: 'Is it...?'" },
+                    { english: "Are you happy?", turkish: "Mutlu musun?", examples: ["Are you happy? Yes, I am.", "Are you happy? No, I'm not."], grammar: "Evet/Hayır soruları: 'Are you...?'" },
+                    { english: "I like...", turkish: "Seviyorum...", examples: ["I like apples.", "I like to play football."], grammar: "'Like' bir şeyi sevdiğini belirtmek için kullanılır." },
+                    { english: "I don't like...", turkish: "Sevmiyorum...", examples: ["I don't like spiders.", "I don't like running."], grammar: "'Don't like' bir şeyi sevmediğini belirtmek için kullanılır." },
+                    { english: "Can I...?", turkish: "...abilir miyim?", examples: ["Can I help you?", "Can I go to the restroom?"], grammar: "'Can' bir yeteneği veya izin istemeyi belirtir." },
+                    { english: "I can...", turkish: "Yapabilirim...", examples: ["I can swim.", "I can read a book."], grammar: "'Can' bir şeyi yapabilme yeteneğini belirtir." },
+                    { english: "I have...", turkish: "Sahibim...", examples: ["I have a brother.", "I have a new toy."], grammar: "'Have' sahip olmak fiilidir." },
+                    { english: "She has...", turkish: "Onun var...", examples: ["She has a cat.", "My sister has long hair."], grammar: "'He/She/It' ile 'has' kullanılır." }
+                ]
+            }
+        ];
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('screen-' + screenId).classList.add('active');
+            stopSpeech(); // Ekran değiştiğinde metin okumayı durdur
+        }
+
+        function login() {
+            let name = document.getElementById('username').value.trim();
+            if (!name) {
+                alert('Lütfen adınızı girin!');
+                return;
+            }
+            localStorage.setItem('userName', name);
+            document.getElementById('user-name').innerText = name;
+            document.getElementById('user-name-results').innerText = name;
+            switchScreen('menu');
+        }
+
+        function openSection(sectionName) {
+            if (sectionName === 'topics') {
+                loadTopicButtons();
+            } else if (sectionName === 'test') {
+                startTest();
+            }
+            switchScreen(sectionName);
+        }
+
+        function goMenu() {
+            switchScreen('menu');
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function speakText(text, lang = 'en-US') {
+            stopSpeech(); // Mevcut konuşmayı durdur
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                utterance.volume = speechVolume; // Ayarlanan ses seviyesini kullan
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.warn("SpeechSynthesis desteklenmiyor.");
+            }
+        }
+
+        function openSoundSettings() {
+            document.getElementById('soundSettingsModal').style.display = 'flex';
+            const savedVolume = localStorage.getItem('masterVolume');
+            if (savedVolume !== null) {
+                document.getElementById('masterVolume').value = savedVolume;
+            }
+        }
+
+        function closeSoundSettings() {
+            document.getElementById('soundSettingsModal').style.display = 'none';
+        }
+
+        function setSpeechVolume(volume) {
+            speechVolume = parseFloat(volume);
+            localStorage.setItem('masterVolume', speechVolume.toString());
+        }
+
+        function showFeedback(message, type, elementId, duration = 1500) {
+            const feedbackElement = elementId ? document.getElementById(elementId) : null;
+            if (feedbackElement) {
+                feedbackElement.innerText = message;
+                feedbackElement.className = 'feedback ' + type;
+                if (type === 'correct') {
+                    speakText('Doğru!', 'tr-TR');
+                } else if (type === 'incorrect') {
+                    speakText('Yanlış!', 'tr-TR');
+                }
+                setTimeout(() => {
+                    feedbackElement.innerText = '';
+                    feedbackElement.className = 'feedback';
+                }, duration);
+            }
+        }
+
+        // Konu Seçimi
+        function loadTopicButtons() {
+            const topicListDiv = document.getElementById('topic-list');
+            topicListDiv.innerHTML = '';
+            topics.forEach(topic => {
+                const button = document.createElement('button');
+                button.innerText = topic.name;
+                button.onclick = () => selectTopic(topic.name);
+                topicListDiv.appendChild(button);
+            });
+        }
+
+        function selectTopic(topicName) {
+            selectedTopic = topicName;
+            currentTopicWords = topics.find(t => t.name === topicName).words;
+            document.getElementById('learn-topic-title').innerText = `📖 ${topicName} Öğren`;
+            currentWordIndex = 0;
+            loadWordForLearning();
+            switchScreen('learn');
+        }
+
+        // Kelime Öğrenme Bölümü
+        function loadWordForLearning() {
+            if (!currentTopicWords || currentTopicWords.length === 0) {
+                document.getElementById('english-word').innerText = "Bu konuda kelime yok.";
+                document.getElementById('turkish-meaning').innerHTML = "";
+                return;
+            }
+
+            const wordData = currentTopicWords[currentWordIndex];
+            const flipCard = document.getElementById('learn-flip-card');
+            flipCard.classList.remove('flipped');
+            
+            document.getElementById('english-word').innerText = wordData.english;
+            document.getElementById('meaning-text').innerText = wordData.turkish;
+
+            const exampleSentencesDiv = document.getElementById('example-sentences');
+            exampleSentencesDiv.innerHTML = '';
+            if (wordData.examples && wordData.examples.length > 0) {
+                exampleSentencesDiv.innerHTML += '<br><b>Örnek Cümleler:</b>';
+                wordData.examples.forEach(ex => {
+                    exampleSentencesDiv.innerHTML += `<br>${ex}`;
+                });
+            }
+
+            const grammarTipsDiv = document.getElementById('grammar-tips');
+            grammarTipsDiv.innerHTML = '';
+            if (wordData.grammar) {
+                grammarTipsDiv.innerHTML += '<br><b>İpucu:</b><br>' + wordData.grammar;
+            }
+            
+            playCurrentWordSound(); // Kelime yüklenince sesini çal
+        }
+
+        function playCurrentWordSound() {
+            if (currentTopicWords && currentTopicWords.length > currentWordIndex) {
+                speakText(currentTopicWords[currentWordIndex].english);
+            }
+        }
+
+        function nextWord() {
+            currentWordIndex = (currentWordIndex + 1);
+            if (currentWordIndex >= currentTopicWords.length) {
+                currentWordIndex = 0; // Başa dön
+            }
+            loadWordForLearning();
+        }
+
+        function previousWord() {
+            currentWordIndex = (currentWordIndex - 1);
+            if (currentWordIndex < 0) {
+                currentWordIndex = currentTopicWords.length - 1; // Sona dön
+            }
+            loadWordForLearning();
+        }
+
+        function flipCard() {
+            document.getElementById('learn-flip-card').classList.toggle('flipped');
+        }
+
+        // Kelime Testi Bölümü
+        let testQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const numberOfQuestionsInTest = 15; // Testteki toplam soru sayısı (istersek artırılabilir)
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function getAllWordsForTest() {
+            // Tüm konuların kelimelerini tek bir listede toplar
+            let allWords = [];
+            topics.forEach(topic => {
+                allWords = allWords.concat(topic.words);
+            });
+            return allWords;
+        }
+
+        function generateTestQuestions() {
+            const allWords = getAllWordsForTest();
+            if (allWords.length < numberOfQuestionsInTest) {
+                console.warn("Test için yeterli kelime yok. Mevcut tüm kelimeler kullanılacak.");
+                testQuestions = shuffleArray([...allWords]).map(word => createQuestion(word, allWords));
+            } else {
+                const selectedWordsForTest = shuffleArray([...allWords]).slice(0, numberOfQuestionsInTest);
+                testQuestions = selectedWordsForTest.map(word => createQuestion(word, allWords));
+            }
+        }
+
+        function createQuestion(correctWord, allWords) {
+            const correctTurkishOption = correctWord.turkish;
+            let incorrectTurkishOptions = [];
+
+            // Doğru cevabı hariç tutarak diğer kelimelerden rastgele yanlış seçenekler bul
+            const filteredWords = allWords.filter(w => w.turkish !== correctTurkishOption);
+            const shuffledFiltered = shuffleArray([...filteredWords]);
+
+            for (let i = 0; incorrectTurkishOptions.length < 3 && i < shuffledFiltered.length; i++) {
+                if (!incorrectTurkishOptions.includes(shuffledFiltered[i].turkish)) {
+                    incorrectTurkishOptions.push(shuffledFiltered[i].turkish);
+                }
+            }
+            
+            // Eğer hala 3 yanlış seçenek yoksa (çok az kelime varsa), aynı şıkkı tekrar eklemekten kaçınarak doldur
+            while (incorrectTurkishOptions.length < 3) {
+                 const randomTurkish = allWords[Math.floor(Math.random() * allWords.length)].turkish;
+                 if (randomTurkish !== correctTurkishOption && !incorrectTurkishOptions.includes(randomTurkish)) {
+                     incorrectTurkishOptions.push(randomTurkish);
+                 } else if (allWords.length <= 1) { // Eğer tek kelime varsa döngüden çık
+                    break;
+                 }
+            }
+
+
+            const options = [...incorrectTurkishOptions.slice(0, 3), correctTurkishOption]; // En fazla 3 yanlış + 1 doğru
+            shuffleArray(options); // Şıkları karıştır
+
+            return {
+                word: correctWord, // İngilizce kelimeyi ve tüm detaylarını içerir
+                options: options, // Türkçe şıklar
+                correctAnswer: correctTurkishOption // Doğru Türkçe kelime
+            };
+        }
+
+        function startTest() {
+            generateTestQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('total-questions').innerText = numberOfQuestionsInTest;
+            loadCurrentQuestion();
+            updateProgress();
+            enableOptions();
+            document.getElementById('prev-test-btn').disabled = true;
+            document.getElementById('next-test-btn').innerText = "Cevapla ve İlerle ➡️";
+            document.getElementById('test-feedback').innerText = '';
+        }
+
+        function loadCurrentQuestion() {
+            stopSpeech();
+            document.getElementById('test-feedback').innerText = '';
+            selectedAnswerValue = null;
+
+            if (currentQuestionIndex < numberOfQuestionsInTest) {
+                const question = testQuestions[currentQuestionIndex];
+                document.getElementById('test-english-word').innerText = question.word.english;
+                playCurrentTestWordSound(); // Sadece test kelimesini seslendir
+                
+                const optionsDiv = document.getElementById('test-options');
+                optionsDiv.innerHTML = '';
+
+                question.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.onclick = () => selectAnswer(option);
+                    optionsDiv.appendChild(button);
+                });
+                
+                document.getElementById('prev-test-btn').disabled = currentQuestionIndex === 0;
+                document.getElementById('next-test-btn').innerText = "Cevapla ve İlerle ➡️";
+                enableOptions();
+                resetOptionStyles();
+            } else {
+                showTestResults();
+            }
+        }
+
+        function resetOptionStyles() {
+            const options = document.querySelectorAll('#test-options button');
+            options.forEach(button => {
+                button.classList.remove('selected', 'correct', 'incorrect');
+            });
+        }
+
+        // Test bölümündeki kelimenin seslendirilmesi
+        function playCurrentTestWordSound() {
+            if (testQuestions && testQuestions.length > currentQuestionIndex) {
+                speakText(testQuestions[currentQuestionIndex].word.english);
+            }
+        }
+
+        let selectedAnswerValue = null;
+
+        function selectAnswer(answer) {
+            selectedAnswerValue = answer;
+            const options = document.querySelectorAll('#test-options button');
+            options.forEach(button => {
+                button.classList.remove('selected');
+            });
+            const clickedButton = Array.from(options).find(button => button.innerText === answer);
+            if (clickedButton) {
+                clickedButton.classList.add('selected');
+            }
+        }
+
+        function checkAnswerAndNext() {
+            if (selectedAnswerValue === null) {
+                showFeedback('Lütfen bir cevap seçin!', 'incorrect', 'test-feedback', 1000);
+                return;
+            }
+
+            const currentQuestion = testQuestions[currentQuestionIndex];
+            const isCorrect = selectedAnswerValue === currentQuestion.correctAnswer;
+
+            const options = document.querySelectorAll('#test-options button');
+            options.forEach(button => {
+                if (button.innerText === currentQuestion.correctAnswer) {
+                    button.classList.add('correct');
+                } else if (button.innerText === selectedAnswerValue && !isCorrect) {
+                    button.classList.add('incorrect');
+                }
+                button.disabled = true; // Cevaplandıktan sonra seçenekleri devre dışı bırak
+            });
+
+            if (isCorrect) {
+                score++;
+                showFeedback('Doğru! Harikasın!', 'correct', 'test-feedback');
+            } else {
+                showFeedback(`Yanlış. Doğru cevap: ${currentQuestion.correctAnswer}`, 'incorrect', 'test-feedback');
+            }
+            
+            selectedAnswerValue = null;
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                updateProgress();
+                loadCurrentQuestion();
+            }, 1500); // 1.5 saniye sonra sonraki soruya geç
+        }
+
+        function enableOptions() {
+            document.querySelectorAll('#test-options button').forEach(button => {
+                button.disabled = false;
+                button.classList.remove('selected', 'correct', 'incorrect');
+            });
+        }
+
+        function previousTestQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadCurrentQuestion();
+                updateProgress();
+            }
+            document.getElementById('test-feedback').innerText = '';
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progress = ((currentQuestionIndex) / numberOfQuestionsInTest) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            if (currentQuestionIndex >= numberOfQuestionsInTest) {
+                showTestResults();
+            }
+        }
+
+        function showTestResults() {
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('total-questions').innerText = numberOfQuestionsInTest;
+            switchScreen('test-results');
+        }
+
+        function restartTest() {
+            startTest();
+            switchScreen('test');
+        }
+
+        window.onload = () => {
+            let storedName = localStorage.getItem('userName');
+            if (storedName) {
+                document.getElementById('user-name').innerText = storedName;
+                document.getElementById('user-name-results').innerText = storedName;
+                switchScreen('menu');
+            } else {
+                switchScreen('login');
+            }
+            
+            const savedVolume = localStorage.getItem('masterVolume');
+            if (savedVolume !== null) {
+                setSpeechVolume(savedVolume);
+                document.getElementById('masterVolume').value = savedVolume;
+            } else {
+                setSpeechVolume(1);
+            }
+        };
+    </script>
+</body>
+</html>
