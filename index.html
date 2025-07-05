@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İngilizce Kelime Macerası</title>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhai+2:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Genel Stil Ayarları */
+        body {
+            font-family: 'Baloo Bhai 2', cursive;
+            background: linear-gradient(135deg, #FFD54F 0%, #FFCA28 100%);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #app {
+            background-color: #FFFFFF;
+            border-radius: 25px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+            max-width: 600px;
+            width: 95%;
+            padding: 30px;
+            box-sizing: border-box;
+            text-align: center;
+            position: relative;
+            border: 5px solid #FFAB00;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 500px;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeInScale 0.6s ease-out forwards;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: translateY(20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        h1, h2 {
+            color: #FF5722;
+            margin-bottom: 25px;
+            font-size: 2.8em;
+            text-shadow: 2px 2px 4px rgba[0, 0, 0, 0.1];
+        }
+
+        h2 {
+            font-size: 2.2em;
+            border-bottom: 3px solid #FFAB91;
+            padding-bottom: 12px;
+            margin-top: 35px;
+        }
+
+        input, button {
+            font-family: 'Baloo Bhai 2', cursive;
+        }
+
+        input:not([type="range"]) {
+            width: calc(100% - 60px);
+            padding: 15px 20px;
+            margin-bottom: 25px;
+            border: 2px solid #FFAB91;
+            border-radius: 12px;
+            font-size: 1.3em;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            background-color: #FFF8E1;
+        }
+
+        input:not([type="range"]):focus {
+            border-color: #FF5722;
+            box-shadow: 0 0 10px rgba(255, 87, 34, 0.4);
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 12px 25px; /* Biraz daha küçük butonlar */
+            border: none;
+            border-radius: 10px; /* Daha yuvarlak */
+            font-size: 1.1em; /* Biraz daha küçük font */
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s;
+            margin: 5px; /* Daha az boşluk */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #66BB6A;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        #sound-settings-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: #FFC107;
+            color: #212121;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+        }
+        #sound-settings-btn:hover {
+            background-color: #FFD54F;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: #FFF8E1;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            text-align: left;
+            position: relative;
+            border: 3px solid #FFAB00;
+        }
+
+        .close-button {
+            color: #FF5722;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover {
+            color: #E64A19;
+        }
+
+        .volume-control {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .volume-control label {
+            font-size: 1.2em;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .volume-control input.range-input {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 8px;
+            background: #FFAB91;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .volume-control input.range-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #FF5722;
+            border-radius: 50%;
+            cursor: grab;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        .main-menu-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .main-menu-buttons button {
+            width: 100%;
+            max-width: 250px;
+            align-self: center;
+            background-color: #2196F3;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            padding: 10px 20px;
+            font-size: 1em;
+        }
+
+        .main-menu-buttons button:hover {
+            background-color: #42A5F5;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        .word-card {
+            background-color: #FFFDE7;
+            border: 3px solid #FFAB00;
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px auto;
+            max-width: 350px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            animation: bounceIn 0.6s ease-out;
+            perspective: 1000px;
+        }
+
+        .flip-container {
+            width: 100%;
+            height: 150px; /* Daha küçük kart */
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            margin-bottom: 15px;
+        }
+
+        .flip-container.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flipper {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            transform-style: preserve-3d;
+        }
+
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 15px;
+            font-size: 2.4em; /* Biraz daha küçük yazı */
+            font-weight: bold;
+            color: #FF5722;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            background-color: #FFFDE7;
+            border: 3px solid #FFAB00;
+            box-sizing: border-box;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            background-color: #CCE5FF;
+            color: #2196F3;
+            font-size: 1.8em;
+            padding: 8px;
+        }
+
+        .word-card button.listen-button {
+            background-color: #2196F3;
+            padding: 12px 25px; /* Daha küçük buton */
+            font-size: 1.1em; /* Daha küçük font */
+            margin-top: 10px;
+        }
+        .word-card button.listen-button:hover {
+            background-color: #42A5F5;
+        }
+
+        .test-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px; /* Daha az boşluk */
+            margin-top: 20px;
+        }
+
+        .test-options button {
+            background-color: #f3f3f3; /* Gri başlangıç rengi */
+            color: #333;
+            padding: 12px 15px; /* Daha küçük butonlar */
+            font-size: 1em; /* Daha küçük font */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .test-options button:hover {
+            background-color: #e0e0e0;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-size: 1.4em;
+            font-weight: bold;
+            animation: bounceIn 0.5s ease-out;
+            min-height: 1.4em;
+            padding: 8px;
+            border-radius: 8px;
+        }
+        .feedback.correct {
+            color: #2E7D32;
+            background-color: #E8F5E9;
+            border: 1px solid #4CAF50;
+        }
+        .feedback.incorrect {
+            color: #D32F2F;
+            background-color: #FFEBEE;
+            border: 1px solid #F44336;
+        }
+        .test-options button.selected {
+            border: 2px solid #2196F3;
+            box-shadow: 0 0 8px rgba(33, 150, 243, 0.6);
+        }
+        .test-options button.correct {
+            background-color: #8BC34A; /* Daha açık yeşil */
+            border-color: #4CAF50;
+            color: white;
+            box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+        }
+        .test-options button.incorrect {
+            background-color: #EF5350; /* Daha açık kırmızı */
+            border-color: #F44336;
+            color: white;
+            box-shadow: 0 0 8px rgba(244, 67, 54, 0.6);
+        }
+
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #FFD54F;
+        }
+
+        .nav-buttons button {
+            background-color: #FF5722;
+            color: #fff;
+            padding: 10px 18px; /* Daha küçük butonlar */
+            font-size: 0.9em; /* Daha küçük font */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            border-radius: 6px;
+        }
+        .nav-buttons button:hover {
+            background-color: #E64A19;
+        }
+
+        #test-progress {
+            background-color: #ddd;
+            border-radius: 5px;
+            margin: 15px auto;
+            height: 20px;
+            width: 80%;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            background-color: #4CAF50;
+            height: 20px;
+            width: 0%;
+            border-radius: 5px;
+            transition: width 0.3s ease-in-out;
+        }
+
+        #test-score {
+            font-size: 1.6em;
+            font-weight: bold;
+            margin-top: 20px;
+            color: #FF9800;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .test-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .test-navigation button {
+            padding: 10px 20px;
+            font-size: 0.9em;
+        }
+
+        #screen-test-results {
+            text-align: center;
+        }
+
+        #screen-test-results h2 {
+            color: #4CAF50;
+        }
+
+        #restart-test-btn {
+            background-color: #FF9800;
+        }
+
+        #restart-test-btn:hover {
+            background-color: #F57C00;
+        }
+
+        @media (max-width: 600px) {
+            #app {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            h2 {
+                font-size: 1.6em;
+            }
+            input {
+                padding: 10px 15px;
+                font-size: 1em;
+            }
+            button {
+                padding: 8px 15px;
+                font-size: 0.9em;
+                margin: 3px;
+            }
+            #sound-settings-btn {
+                top: 10px;
+                right: 10px;
+                padding: 6px 10px;
+                font-size: 0.8em;
+            }
+            .volume-control label {
+                font-size: 1em;
+            }
+            .main-menu-buttons button {
+                font-size: 0.9em;
+                padding: 10px 20px;
+            }
+            .word-card {
+                padding: 20px;
+                margin: 15px auto;
+                max-width: 300px;
+            }
+            .flip-container {
+                height: 120px;
+                margin-bottom: 10px;
+            }
+            .front, .back {
+                font-size: 1.8em;
+            }
+            .back {
+                font-size: 1.4em;
+            }
+            .word-card button.listen-button {
+                font-size: 0.9em;
+                padding: 10px 20px;
+                margin-top: 8px;
+            }
+            .test-options {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                margin-top: 15px;
+            }
+            .test-options button {
+                font-size: 0.9em;
+                padding: 10px;
+            }
+            .feedback {
+                font-size: 1.2em;
+                margin-top: 10px;
+                padding: 6px;
+            }
+            .nav-buttons {
+                margin-top: 20px;
+                padding-top: 10px;
+            }
+            .nav-buttons button {
+                padding: 8px 15px;
+                font-size: 0.8em;
+            }
+            #test-progress {
+                width: 90%;
+            }
+            #test-score {
+                font-size: 1.4em;
+            }
+            .test-navigation button {
+                padding: 8px 15px;
+                font-size: 0.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+
+        <button id="sound-settings-btn" onclick="openSoundSettings()">🔊 Ses</button>
+
+        <div id="soundSettingsModal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" onclick="closeSoundSettings()">&times;</span>
+                <h2>Ses Ayarları</h2>
+                <div class="volume-control">
+                    <label for="masterVolume">Ses Seviyesi:</label>
+                    <input type="range" id="masterVolume" class="range-input" min="0" max="1" step="0.01" value="1" oninput="setSpeechVolume(this.value)">
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-login" class="screen active">
+            <h1>Kelime Macerası</h1>
+            <p>Adın:</p>
+            <input type="text" id="username" placeholder="Adını yaz">
+            <button onclick="login()">Başla!</button>
+        </div>
+
+        <div id="screen-menu" class="screen">
+            <h1>Merhaba, <span id="user-name"></span>!</h1>
+            <div class="main-menu-buttons">
+                <button onclick="openSection('learn')">📖 Öğren</button>
+                <button onclick="openSection('test')">📝 Test</button>
+            </div>
+        </div>
+
+        <div id="screen-learn" class="screen">
+            <h2>📖 Kelime Öğren</h2>
+            <div class="word-card">
+                <div class="flip-container" id="learn-flip-card" onclick="flipCard()">
+                    <div class="flipper">
+                        <div class="front" id="english-word"></div>
+                        <div class="back" id="turkish-meaning"></div>
+                    </div>
+                </div>
+                <button class="listen-button" onclick="playCurrentWordSound()">Dinle 🔊</button>
+            </div>
+            <div class="nav-buttons">
+                <button onclick="goMenu()">Menü</button>
+                <button onclick="previousWord()">⬅️ Önceki</button>
+                <button onclick="nextWord()">Sonraki ➡️</button>
+            </div>
+        </div>
+
+        <div id="screen-test" class="screen">
+            <h2>📝 Kelime Testi</h2>
+            <div id="test-progress">
+                <div id="progress-bar"></div>
+            </div>
+            <div class="word-card">
+                <p id="test-english-word" style="font-size: 2em;"></p>
+                <button class="listen-button" onclick="playCurrentTestWordSoundForDisplay()">Dinle 🔊</button>
+            </div>
+            <div class="test-options" id="test-options">
+                </div>
+            <p id="test-feedback" class="feedback"></p>
+            <div class="test-navigation">
+                <button onclick="previousTestQuestion()" id="prev-test-btn" disabled>⬅️ Önceki</button>
+                <button onclick="checkAnswerAndNext()" id="next-test-btn">Cevapla ve İlerle ➡️</button>
+            </div>
+        </div>
+
+        <div id="screen-test-results" class="screen">
+            <h2>🎉 Test Tamamlandı! 🎉</h2>
+            <p>Tebrikler <span id="user-name-results"></span>!</p>
+            <p>Puanın: <span id="final-score"></span> / <span id="total-questions"></span></p>
+            <button id="restart-test-btn" onclick="restartTest()">Tekrar Dene</button>
+            <button onclick="goMenu()">Menüye Dön</button>
+        </div>
+
+    </div>
+
+    <script>
+        /* JavaScript Başlangıcı */
+
+        let currentWordIndex = 0;
+        let speechVolume = 1; // Varsayılan ses seviyesi
+
+        // Kelime listesi - 4. sınıf seviyesine uygun, yaklaşık 150 kelime
+        const words = [
+            { english: "Hello", turkish: "Merhaba" },
+            { english: "Goodbye", turkish: "Güle güle" },
+            { english: "Please", turkish: "Lütfen" },
+            { english: "Thank you", turkish: "Teşekkür ederim" },
+            { english: "Yes", turkish: "Evet" },
+            { english: "No", turkish: "Hayır" },
+            { english: "Cat", turkish: "Kedi" },
+            { english: "Dog", turkish: "Köpek" },
+            { english: "Book", turkish: "Kitap" },
+            { english: "Water", turkish: "Su" },
+            { english: "Food", turkish: "Yemek" },
+            { english: "House", turkish: "Ev" },
+            { english: "Car", turkish: "Araba" },
+            { english: "Run", turkish: "Koşmak" },
+            { english: "Walk", turkish: "Yürümek" },
+            { english: "Eat", turkish: "Yemek yemek" },
+            { english: "Drink", turkish: "İçmek" },
+            { english: "Happy", turkish: "Mutlu" },
+            { english: "Sad", turkish: "Üzgün" },
+            { english: "Big", turkish: "Büyük" },
+            { english: "Small", turkish: "Küçük" },
+            { english: "Red", turkish: "Kırmızı" },
+            { english: "Blue", turkish: "Mavi" },
+            { english: "Green", turkish: "Yeşil" },
+            { english: "Sun", turkish: "Güneş" },
+            { english: "Moon", turkish: "Ay" },
+            { english: "Star", turkish: "Yıldız" },
+            { english: "One", turkish: "Bir" },
+            { english: "Two", turkish: "İki" },
+            { english: "Three", turkish: "Üç" },
+            { english: "Four", turkish: "Dört" },
+            { english: "Five", turkish: "Beş" },
+            { english: "Six", turkish: "Altı" },
+            { english: "Seven", turkish: "Yedi" },
+            { english: "Eight", turkish: "Sekiz" },
+            { english: "Nine", turkish: "Dokuz" },
+            { english: "Ten", turkish: "On" },
+            { english: "Apple", turkish: "Elma" },
+            { english: "Banana", turkish: "Muz" },
+            { english: "Orange", turkish: "Portakal" },
+            { english: "Grape", turkish: "Üzüm" },
+            { english: "Milk", turkish: "Süt" },
+            { english: "Bread", turkish: "Ekmek" },
+            { english: "Chair", turkish: "Sandalye" },
+            { english: "Table", turkish: "Masa" },
+            { english: "Bed", turkish: "Yatak" },
+            { english: "Door", turkish: "Kapı" },
+            { english: "Window", turkish: "Pencere" },
+            { english: "Tree", turkish: "Ağaç" },
+            { english: "Flower", turkish: "Çiçek" },
+            { english: "Bird", turkish: "Kuş" },
+            { english: "Fish", turkish: "Balık" },
+            { english: "Boy", turkish: "Erkek çocuk" },
+            { english: "Girl", turkish: "Kız çocuk" },
+            { english: "Man", turkish: "Adam" },
+            { english: "Woman", turkish: "Kadın" },
+            { english: "Family", turkish: "Aile" },
+            { english: "Friend", turkish: "Arkadaş" },
+            { english: "School", turkish: "Okul" },
+            { english: "Teacher", turkish: "Öğretmen" },
+            { english: "Student", turkish: "Öğrenci" },
+            { english: "Play", turkish: "Oynamak" },
+            { english: "Sing", turkish: "Şarkı söylemek" },
+            { english: "Dance", turkish: "Dans etmek" },
+            { english: "Read", turkish: "Okumak" },
+            { english: "Write", turkish: "Yazmak" },
+            { english: "Draw", turkish: "Çizmek" },
+            { english: "Listen", turkish: "Dinlemek" },
+            { english: "Look", turkish: "Bakmak" },
+            { english: "See", turkish: "Görmek" },
+            { english: "Hear", turkish: "Duymak" },
+            { english: "Talk", turkish: "Konuşmak" },
+            { english: "Say", turkish: "Söylemek" },
+            { english: "Ask", turkish: "Sormak" },
+            { english: "Answer", turkish: "Cevaplamak" },
+            { english: "Go", turkish: "Gitmek" },
+            { english: "Come", turkish: "Gelmek" },
+            { english: "Stand", turkish: "Durmak (ayakta)" },
+            { english: "Sit", turkish: "Oturmak" },
+            { english: "Open", turkish: "Açmak" },
+            { english: "Close", turkish: "Kapatmak" },
+            { english: "Start", turkish: "Başlamak" },
+            { english: "Finish", turkish: "Bitirmek" },
+            { english: "Like", turkish: "Sevmek" },
+            { english: "Love", turkish: "Aşktan sevmek" },
+            { english: "Hate", turkish: "Nefret etmek" },
+            { english: "Know", turkish: "Bilmek" },
+            { english: "Think", turkish: "Düşünmek" },
+            { english: "Feel", turkish: "Hissetmek" },
+            { english: "Want", turkish: "İstemek" },
+            { english: "Need", turkish: "İhtiyaç duymak" },
+            { english: "Give", turkish: "Vermek" },
+            { english: "Take", turkish: "Almak" },
+            { english: "Make", turkish: "Yapmak" },
+            { english: "Do", turkish: "Yapmak" },
+            { english: "Have", turkish: "Sahip olmak" },
+            { english: "Get", turkish: "Almak, elde etmek" },
+            { english: "Put", turkish: "Koymak" },
+            { english: "Bring", turkish: "Getirmek" },
+            { english: "Find", turkish: "Bulmak" },
+            { english: "Lose", turkish: "Kaybetmek" },
+            { english: "Show", turkish: "Göstermek" },
+            { english: "Tell", turkish: "Anlatmak" },
+            { english: "Call", turkish: "Aramak (telefonla/seslenmek)" },
+            { english: "Wait", turkish: "Beklemek" },
+            { english: "Help", turkish: "Yardım etmek" },
+            { english: "Work", turkish: "Çalışmak" },
+            { english: "Stop", turkish: "Durmak" },
+            { english: "Up", turkish: "Yukarı" },
+            { english: "Down", turkish: "Aşağı" },
+            { english: "In", turkish: "İçinde" },
+            { english: "Out", turkish: "Dışında" },
+            { english: "On", turkish: "Üzerinde" },
+            { english: "Off", turkish: "Kapalı" },
+            { english: "Under", turkish: "Altında" },
+            { english: "Over", turkish: "Üzerinde (temas yok)" },
+            { english: "Near", turkish: "Yakın" },
+            { english: "Far", turkish: "Uzak" },
+            { english: "Good", turkish: "İyi" },
+            { english: "Bad", turkish: "Kötü" },
+            { english: "New", turkish: "Yeni" },
+            { english: "Old", turkish: "Eski" },
+            { english: "Hot", turkish: "Sıcak" },
+            { english: "Cold", turkish: "Soğuk" },
+            { english: "Full", turkish: "Dolu" },
+            { english: "Empty", turkish: "Boş" },
+            { english: "Fast", turkish: "Hızlı" },
+            { english: "Slow", turkish: "Yavaş" },
+            { english: "Clean", turkish: "Temiz" },
+            { english: "Dirty", turkish: "Kirli" },
+            { english: "Loud", turkish: "Yüksek sesli" },
+            { english: "Quiet", turkish: "Sessiz" },
+            { english: "Light", turkish: "Hafif" },
+            { english: "Heavy", turkish: "Ağır" },
+            { english: "Easy", turkish: "Kolay" },
+            { english: "Hard", turkish: "Zor" },
+            { english: "Right", turkish: "Doğru / Sağ" },
+            { english: "Left", turkish: "Sol" },
+            { english: "First", turkish: "İlk" },
+            { english: "Last", turkish: "Son" },
+            { english: "Many", turkish: "Çok (sayılabilir)" },
+            { english: "Much", turkish: "Çok (sayılamaz)" },
+            { english: "Some", turkish: "Bazı, biraz" },
+            { english: "Any", turkish: "Hiç, herhangi" },
+            { english: "All", turkish: "Hepsi" },
+            { english: "None", turkish: "Hiçbiri" },
+            { english: "Every", turkish: "Her" },
+            { english: "Other", turkish: "Diğer" },
+            { english: "Same", turkish: "Aynı" },
+            { english: "Different", turkish: "Farklı" },
+            { english: "True", turkish: "Doğru" },
+            { english: "False", turkish: "Yanlış" },
+            { english: "About", turkish: "Hakkında, yaklaşık" },
+            { english: "After", turkish: "Sonra" },
+            { english: "Before", turkish: "Önce" },
+            { english: "Between", turkish: "Arasında (iki şey)" },
+            { english: "Through", turkish: "İçinden" },
+            { english: "Across", turkish: "Karşıdan karşıya" },
+            { english: "Around", turkish: "Etrafında" },
+            { english: "From", turkish: "Den, dan" },
+            { english: "To", turkish: "E, a" },
+            { english: "With", turkish: "İle birlikte" },
+            { english: "Without", turkish: "Sız, siz" },
+            { english: "By", turkish: "Yanında, tarafından" },
+            { english: "For", turkish: "İçin" },
+            { english: "Of", turkish: "Nın, nin" },
+            { english: "At", turkish: "De, da (nokta)" },
+            { english: "In", turkish: "İçinde (geniş alan)" },
+            { english: "On", turkish: "Üzerinde (yüzey)" },
+            { english: "But", turkish: "Ama, fakat" },
+            { english: "And", turkish: "Ve" },
+            { english: "Or", turkish: "Veya" },
+            { english: "So", turkish: "Bu yüzden" },
+            { english: "Because", turkish: "Çünkü" },
+            { english: "If", turkish: "Eğer" },
+            { english: "When", turkish: "Ne zaman" },
+            { english: "Where", turkish: "Nerede" },
+            { english: "What", turkish: "Ne" },
+            { english: "Who", turkish: "Kim" },
+            { english: "Why", turkish: "Neden" },
+            { english: "How", turkish: "Nasıl" },
+            { english: "Then", turkish: "Sonra, o zaman" },
+            { english: "Now", turkish: "Şimdi" },
+            { english: "Always", turkish: "Her zaman" },
+            { english: "Never", turkish: "Asla" },
+            { english: "Often", turkish: "Sık sık" },
+            { english: "Sometimes", turkish: "Bazen" },
+            { english: "Usually", turkish: "Genellikle" },
+            { english: "Tomorrow", turkish: "Yarın" },
+            { english: "Today", turkish: "Bugün" },
+            { english: "Yesterday", turkish: "Dün" },
+            { english: "Morning", turkish: "Sabah" },
+            { english: "Afternoon", turkish: "Öğleden sonra" },
+            { english: "Evening", turkish: "Akşam" },
+            { english: "Night", turkish: "Gece" },
+            { english: "Day", turkish: "Gün" },
+            { english: "Week", turkish: "Hafta" },
+            { english: "Month", turkish: "Ay" },
+            { english: "Year", turkish: "Yıl" },
+            { english: "Time", turkish: "Zaman" },
+            { english: "Minute", turkish: "Dakika" },
+            { english: "Hour", turkish: "Saat" },
+            { english: "Second", turkish: "Saniye" },
+            { english: "Color", turkish: "Renk" },
+            { english: "Shape", turkish: "Şekil" },
+            { english: "Size", turkish: "Boyut" },
+            { english: "Number", turkish: "Sayı" },
+            { english: "Letter", turkish: "Harf" },
+            { english: "Word", turkish: "Kelime" },
+            { english: "Sentence", turkish: "Cümle" },
+            { english: "Question", turkish: "Soru" },
+            { english: "Answer", turkish: "Cevap" },
+            { english: "Problem", turkish: "Problem" },
+            { english: "Solution", turkish: "Çözüm" },
+            { english: "Idea", turkish: "Fikir" },
+            { english: "Way", turkish: "Yol" },
+            { english: "Thing", turkish: "Şey" },
+            { english: "People", turkish: "İnsanlar" },
+            { english: "Child", turkish: "Çocuk" },
+            { english: "Parent", turkish: "Ebeveyn" },
+            { english: "Brother", turkish: "Erkek kardeş" },
+            { english: "Sister", turkish: "Kız kardeş" },
+            { english: "Sky", turkish: "Gökyüzü" },
+            { english: "Cloud", turkish: "Bulut" },
+            { english: "Rain", turkish: "Yağmur" },
+            { english: "Snow", turkish: "Kar" },
+            { english: "Wind", turkish: "Rüzgar" },
+            { english: "Ice", turkish: "Buz" },
+            { english: "Fire", turkish: "Ateş" },
+            { english: "Air", turkish: "Hava" },
+            { english: "Earth", turkish: "Dünya" },
+            { english: "Sea", turkish: "Deniz" },
+            { english: "River", turkish: "Nehir" },
+            { english: "Lake", turkish: "Göl" },
+            { english: "Mountain", turkish: "Dağ" },
+            { english: "Hill", turkish: "Tepe" },
+            { english: "Valley", turkish: "Vadi" },
+            { english: "Forest", turkish: "Orman" },
+            { english: "Grass", turkish: "Çim" },
+            { english: "Road", turkish: "Yol" },
+            { english: "Street", turkish: "Cadde" },
+            { english: "Town", turkish: "Kasaba" },
+            { english: "City", turkish: "Şehir" },
+            { english: "Country", turkish: "Ülke" },
+            { english: "World", turkish: "Dünya" }
+        ];
+
+        // Bu fonksiyon, uygulama genelinde kelime listesine erişmek için kullanılır.
+        function wordsListForApp() {
+            return words;
+        }
+
+        function switchScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById('screen-' + screenId).classList.add('active');
+            stopSpeech(); // Ekran değiştiğinde metin okumayı durdur
+
+            if (screenId === 'learn') {
+                currentWordIndex = 0;
+                loadWordForLearning();
+            } else if (screenId === 'test') {
+                startTest();
+            }
+        }
+
+        function login() {
+            let name = document.getElementById('username').value.trim();
+            if (!name) {
+                alert('Lütfen adınızı girin!');
+                return;
+            }
+            localStorage.setItem('userName', name);
+            document.getElementById('user-name').innerText = name;
+            document.getElementById('user-name-results').innerText = name;
+            switchScreen('menu');
+        }
+
+        function openSection(sectionName) {
+            switchScreen(sectionName);
+        }
+
+        function goMenu() {
+            switchScreen('menu');
+        }
+
+        function stopSpeech() {
+            if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
+            }
+        }
+
+        function speakText(text, lang = 'en-US') {
+            stopSpeech(); // Mevcut konuşmayı durdur
+
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+                utterance.volume = speechVolume; // Ayarlanan ses seviyesini kullan
+                window.speechSynthesis.speak(utterance);
+            } else {
+                console.warn("SpeechSynthesis desteklenmiyor.");
+            }
+        }
+
+        function openSoundSettings() {
+            document.getElementById('soundSettingsModal').style.display = 'flex';
+            const savedVolume = localStorage.getItem('masterVolume');
+            if (savedVolume !== null) {
+                document.getElementById('masterVolume').value = savedVolume;
+            }
+        }
+
+        function closeSoundSettings() {
+            document.getElementById('soundSettingsModal').style.display = 'none';
+        }
+
+        function setSpeechVolume(volume) {
+            speechVolume = parseFloat(volume);
+            localStorage.setItem('masterVolume', speechVolume.toString());
+            // Anlık olarak ses seviyesini test etmek için bir kelime söyleyebiliriz
+            // speakText("Hello", 'en-US');
+        }
+
+        function showFeedback(message, type, elementId, duration = 1500) {
+            const feedbackElement = elementId ? document.getElementById(elementId) : null;
+            if (feedbackElement) {
+                feedbackElement.innerText = message;
+                feedbackElement.className = 'feedback ' + type;
+                // Doğru/yanlış sesi için kısa bir Türkçe seslendirme
+                if (type === 'correct') {
+                    speakText('Doğru!', 'tr-TR');
+                } else if (type === 'incorrect') {
+                    speakText('Yanlış!', 'tr-TR');
+                }
+                // Geri bildirimi bir süre sonra temizle
+                setTimeout(() => {
+                    feedbackElement.innerText = '';
+                    feedbackElement.className = 'feedback';
+                }, duration);
+            }
+        }
+
+        // Kelime Öğrenme Bölümü
+        function loadWordForLearning() {
+            const word = wordsListForApp()[currentWordIndex];
+            const flipCard = document.getElementById('learn-flip-card');
+            flipCard.classList.remove('flipped');
+            document.getElementById('english-word').innerText = word.english;
+            document.getElementById('turkish-meaning').innerText = word.turkish;
+            playCurrentWordSound(); // Kelime yüklenince sesini çal
+        }
+
+        function playCurrentWordSound() {
+            speakText(wordsListForApp()[currentWordIndex].english);
+        }
+
+        function nextWord() {
+            currentWordIndex = (currentWordIndex + 1);
+            const wordList = wordsListForApp();
+            if (currentWordIndex >= wordList.length) {
+                currentWordIndex = 0; // Başa dön
+            }
+            loadWordForLearning();
+        }
+
+        function previousWord() {
+            currentWordIndex = (currentWordIndex - 1);
+            if (currentWordIndex < 0) {
+                currentWordIndex = wordsListForApp().length - 1; // Sona dön
+            }
+            loadWordForLearning();
+        }
+
+        function flipCard() {
+            document.getElementById('learn-flip-card').classList.toggle('flipped');
+        }
+
+        // Kelime Testi Bölümü
+        let testQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const numberOfQuestions = 20; // Toplam soru sayısı.
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function selectRandomWordsForTest(allWords, count) {
+            if (allWords.length < count) {
+                console.warn("Test için yeterli kelime yok. Mevcut tüm kelimeler kullanılacak.");
+                return shuffleArray([...allWords]);
+            }
+            const shuffled = [...allWords].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function generateTestQuestions() {
+            const allWords = wordsListForApp();
+            const selectedWords = selectRandomWordsForTest(allWords, numberOfQuestions);
+            testQuestions = selectedWords.map(word => {
+                const correctTurkishOption = word.turkish;
+                let incorrectTurkishOptions = allWords
+                    .filter(w => w.turkish !== correctTurkishOption) // Doğru cevabı seçeneklerden çıkar
+                    .sort(() => 0.5 - Math.random()) // Rastgele sırala
+                    .slice(0, 3) // İlk 3'ünü al
+                    .map(w => w.turkish);
+
+                // Eğer 3 yanlış seçenek yoksa veya bazıları boşsa, benzersiz yanlış seçenekler eklemeye çalış
+                while (incorrectTurkishOptions.length < 3 && allWords.length > (incorrectTurkishOptions.length + 1)) {
+                    const randomWord = allWords[Math.floor(Math.random() * allWords.length)];
+                    if (randomWord.turkish !== correctTurkishOption && !incorrectTurkishOptions.includes(randomWord.turkish)) {
+                        incorrectTurkishOptions.push(randomWord.turkish);
+                    }
+                }
+                // Seçenek sayısını 4'e sabitle (doğru cevap + 3 yanlış)
+                incorrectTurkishOptions = incorrectTurkishOptions.slice(0, 3); // Fazla seçenek olmasın diye kes
+
+                const options = [...incorrectTurkishOptions, correctTurkishOption];
+                shuffleArray(options); // Şıkları karıştır
+
+                return {
+                    word: word, // Bu, İngilizce kelime için
+                    options: options, // Türkçe şıklar
+                    correctAnswer: correctTurkishOption // Doğru Türkçe kelime
+                };
+            });
+        }
+
+        function startTest() {
+            generateTestQuestions();
+            currentQuestionIndex = 0;
+            score = 0;
+            document.getElementById('total-questions').innerText = numberOfQuestions; // Toplam soru sayısını güncelle
+            loadCurrentQuestion();
+            updateProgress();
+            // Test her başladığında seçenekleri etkinleştir ve buton metnini sıfırla
+            enableOptions();
+            document.getElementById('prev-test-btn').disabled = true; // İlk soruda önceki butonunu devre dışı bırak
+            document.getElementById('next-test-btn').innerText = "Cevapla ve İlerle ➡️";
+            document.getElementById('test-feedback').innerText = ''; // Geri bildirimi temizle
+        }
+
+        function loadCurrentQuestion() {
+            stopSpeech(); // Yeni soru yüklenince önceki sesleri durdur
+            document.getElementById('test-feedback').innerText = ''; // Geri bildirimi temizle
+            selectedAnswerValue = null; // Seçimi sıfırla
+
+            if (currentQuestionIndex < numberOfQuestions) {
+                const question = testQuestions[currentQuestionIndex];
+                // Soru artık İngilizce kelime olacak
+                document.getElementById('test-english-word').innerText = question.word.english;
+                playCurrentTestWordSoundForDisplay(); // Sorunun İngilizce sesini çal
+                
+                const optionsDiv = document.getElementById('test-options');
+                optionsDiv.innerHTML = ''; // Önceki seçenekleri temizle
+
+                question.options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.innerText = option;
+                    button.onclick = () => selectAnswer(option);
+                    optionsDiv.appendChild(button);
+                });
+                
+                document.getElementById('prev-test-btn').disabled = currentQuestionIndex === 0;
+                document.getElementById('next-test-btn').innerText = "Cevapla ve İlerle ➡️";
+                enableOptions(); // Yeni soru yüklenirken seçenekleri tekrar etkinleştir
+                resetOptionStyles(); // Seçeneklerin stilini sıfırla
+            } else {
+                showTestResults();
+            }
+        }
+
+        function resetOptionStyles() {
+            const options = document.querySelectorAll('#test-options button');
+            options.forEach(button => {
+                button.classList.remove('selected', 'correct', 'incorrect');
+            });
+        }
+
+        function playCurrentTestWordSoundForDisplay() {
+            // Sadece test sorusunun İngilizce kelimesinin sesini çal
+            if (testQuestions && testQuestions.length > currentQuestionIndex) {
+                speakText(testQuestions[currentQuestionIndex].word.english);
+            }
+        }
+
+        let selectedAnswerValue = null; // Kullanıcının seçtiği cevabı tutar
+
+        function selectAnswer(answer) {
+            selectedAnswerValue = answer;
+            const options = document.querySelectorAll('#test-options button');
+            options.forEach(button => {
+                button.classList.remove('selected');
+            });
+            // Seçilen butona 'selected' sınıfını ekle
+            const clickedButton = Array.from(options).find(button => button.innerText === answer);
+            if (clickedButton) {
+                clickedButton.classList.add('selected');
+            }
+        }
+
+        function checkAnswerAndNext() {
+            if (selectedAnswerValue === null) {
+                showFeedback('Lütfen bir cevap seçin!', 'incorrect', 'test-feedback', 1000);
+                return;
+            }
+
+            const currentQuestion = testQuestions[currentQuestionIndex];
+            const isCorrect = selectedAnswerValue === currentQuestion.correctAnswer;
+
+            const options = document.querySelectorAll('#test-options button');
+            options.forEach(button => {
+                if (button.innerText === currentQuestion.correctAnswer) {
+                    button.classList.add('correct'); // Doğru cevabı her zaman yeşil yap
+                } else if (button.innerText === selectedAnswerValue && !isCorrect) {
+                    button.classList.add('incorrect'); // Yanlış seçileni kırmızı yap
+                }
+                button.disabled = true; // Tüm şıkları devre dışı bırak
+            });
+
+            if (isCorrect) {
+                score++;
+                showFeedback('Doğru! Harikasın!', 'correct', 'test-feedback');
+            } else {
+                showFeedback(`Yanlış. Doğru cevap: ${currentQuestion.correctAnswer}`, 'incorrect', 'test-feedback');
+            }
+            
+            selectedAnswerValue = null; // Seçimi sıfırla
+
+            // Sonraki soruya geçmek veya testi bitirmek için bekle
+            setTimeout(() => {
+                currentQuestionIndex++;
+                updateProgress();
+                loadCurrentQuestion();
+            }, 1500); // 1.5 saniye sonra geç
+        }
+
+        function enableOptions() {
+            document.querySelectorAll('#test-options button').forEach(button => {
+                button.disabled = false;
+                button.classList.remove('selected', 'correct', 'incorrect'); // Stil sınıflarını temizle
+            });
+        }
+
+
+        function previousTestQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                loadCurrentQuestion();
+                updateProgress();
+            }
+            document.getElementById('test-feedback').innerText = ''; // Geri bildirimi temizle
+        }
+
+        function updateProgress() {
+            const progressBar = document.getElementById('progress-bar');
+            const progress = ((currentQuestionIndex) / numberOfQuestions) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            // Testin bitip bitmediğini kontrol et
+            if (currentQuestionIndex >= numberOfQuestions) {
+                showTestResults();
+            }
+        }
+
+        function showTestResults() {
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('total-questions').innerText = numberOfQuestions;
+            switchScreen('test-results');
+        }
+
+        function restartTest() {
+            startTest();
+            switchScreen('test');
+        }
+
+        window.onload = () => {
+            let storedName = localStorage.getItem('userName');
+            if (storedName) {
+                document.getElementById('user-name').innerText = storedName;
+                document.getElementById('user-name-results').innerText = storedName;
+                switchScreen('menu');
+            } else {
+                switchScreen('login');
+            }
+            
+            const savedVolume = localStorage.getItem('masterVolume');
+            if (savedVolume !== null) {
+                setSpeechVolume(savedVolume);
+                document.getElementById('masterVolume').value = savedVolume;
+            } else {
+                setSpeechVolume(1); // Varsayılan ses seviyesini ayarla
+            }
+        };
+
+        /* JavaScript Sonu */
+    </script>
+</body>
+</html>
