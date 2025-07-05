@@ -122,7 +122,7 @@
             padding: 8px 12px;
             font-size: 0.9em;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 4px rgba[0, 0, 0, 0.15];
             z-index: 1000;
         }
         #sound-settings-btn:hover {
@@ -273,6 +273,7 @@
             background-color: #E0F2F1;
             border: 3px solid #00BFA5;
             box-sizing: border-box;
+            padding: 10px; /* İçerik için boşluk */
         }
 
         .back {
@@ -284,17 +285,31 @@
             line-height: 1.4;
         }
 
-        .back .example-sentences, .back .grammar-tips {
-            font-size: 0.6em; /* Daha küçük font */
+        /* Yeni: Öğrenme ekranı örnek cümle ve Türkçe anlam puntoları */
+        .back .example-sentence-text, .back .example-sentence-turkish {
+            font-size: 1.2em; /* Örnek cümle puntoları */
             font-weight: normal;
             margin-top: 10px;
             color: #4CAF50; /* Yeşil renkte örnekler */
             text-align: center;
             max-width: 90%;
             word-break: break-word; /* Uzun kelimeleri kırması için */
+            line-height: 1.3;
         }
+        .back .example-sentence-turkish {
+             color: #2196F3; /* Mavi renkte Türkçe anlam */
+             font-weight: bold; /* Türkçe anlamı daha belirgin */
+             margin-top: 5px;
+        }
+
         .back .grammar-tips {
-             color: #2196F3; /* Mavi renkte dilbilgisi ipuçları */
+            font-size: 0.8em; /* Dilbilgisi ipuçları için uygun boyut */
+            font-weight: normal;
+            margin-top: 10px;
+            color: #2196F3; /* Mavi renkte dilbilgisi ipuçları */
+            text-align: center;
+            max-width: 90%;
+            word-break: break-word;
         }
 
 
@@ -446,6 +461,23 @@
         #restart-test-btn:hover {
             background-color: #F57C00;
         }
+        
+        #test-question-text {
+            font-size: 2.2em; /* Soru cümlesi font boyutu */
+            color: #00BFA5;
+            margin-bottom: 20px;
+            min-height: 1.5em; /* Sorunun boş kalmaması için */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Uzun sorular için */
+        }
+        
+        #test-question-text .question-word {
+            font-weight: bold;
+            color: #FF5722; /* Sorulan kelimeyi vurgula */
+        }
+
 
         @media (max-width: 600px) {
             #app {
@@ -495,8 +527,8 @@
                 font-size: 1.6em;
                 padding: 10px;
             }
-            .back .example-sentences, .back .grammar-tips {
-                font-size: 0.5em;
+            .back .example-sentence-text, .back .example-sentence-turkish, .back .grammar-tips {
+                font-size: 0.8em; /* Mobil için puntoları küçült */
                 margin-top: 5px;
             }
             .word-card button.listen-button {
@@ -535,6 +567,9 @@
             .test-navigation button {
                 padding: 8px 15px;
                 font-size: 0.8em;
+            }
+            #test-question-text {
+                font-size: 1.8em;
             }
         }
     </style>
@@ -587,7 +622,10 @@
                         <div class="front" id="english-word"></div>
                         <div class="back" id="turkish-meaning">
                             <span id="meaning-text"></span>
-                            <div class="example-sentences" id="example-sentences"></div>
+                            <div class="example-sentences">
+                                <span class="example-sentence-text" id="example-sentence-text"></span>
+                                <span class="example-sentence-turkish" id="example-sentence-turkish"></span>
+                            </div>
                             <div class="grammar-tips" id="grammar-tips"></div>
                         </div>
                     </div>
@@ -607,16 +645,14 @@
                 <div id="progress-bar"></div>
             </div>
             <div class="word-card">
-                <p id="test-english-word" style="font-size: 2.2em; color: #00BFA5;"></p>
-                <button class="listen-button" onclick="playCurrentTestWordSound()">Dinle 🔊</button>
+                <p id="test-question-text"></p>
+                <button class="listen-button" onclick="playCurrentTestQuestionSound()">Dinle 🔊</button>
             </div>
             <div class="test-options" id="test-options">
-                </div>
+            </div>
             <p id="test-feedback" class="feedback"></p>
             <div class="test-navigation">
-                <button onclick="previousTestQuestion()" id="prev-test-btn" disabled>⬅️ Önceki</button>
-                <button onclick="checkAnswerAndNext()" id="next-test-btn">Cevapla ve İlerle ➡️</button>
-            </div>
+                <button onclick="openSection('topics')">Konulara Dön</button> </div>
         </div>
 
         <div id="screen-test-results" class="screen">
@@ -636,178 +672,132 @@
         let selectedTopic = null; 
 
         // Konulara ayrılmış kelime listesi ve ek bilgiler
+        // Her kelime için ekledim:
+        // - question_text: Testte kullanılacak soru cümlesi
+        // - question_highlight: Soru cümlesinde vurgulanacak kelime (İngilizce)
+        // - turkish_question_text: Testte kullanılacak soru cümlesinin Türkçe anlamı (Şıklarda olmasa bile anlamak için)
+
         const topics = [
             {
                 name: "Greetings & Basics",
                 words: [
-                    { english: "Hello", turkish: "Merhaba", examples: ["Hello, my name is Alex.", "Hello, how are you?"], grammar: "Selamlaşma ifadeleri." },
-                    { english: "Goodbye", turkish: "Güle güle", examples: ["Goodbye, see you tomorrow.", "Goodbye, have a nice day."], grammar: "" },
-                    { english: "Please", turkish: "Lütfen", examples: ["Please sit down.", "Can I have some water, please?"], grammar: "" },
-                    { english: "Thank you", turkish: "Teşekkür ederim", examples: ["Thank you for your help.", "Thank you, that's kind."], grammar: "" },
-                    { english: "Yes", turkish: "Evet", examples: ["Yes, I can.", "Yes, it is."], grammar: "" },
-                    { english: "No", turkish: "Hayır", examples: ["No, I cannot.", "No, it is not."], grammar: "" },
-                    { english: "Good morning", turkish: "Günaydın", examples: ["Good morning, class.", "Good morning, Mom."], grammar: "" },
-                    { english: "Good afternoon", turkish: "Tünaydın", examples: ["Good afternoon, friends."], grammar: "" },
-                    { english: "Good evening", turkish: "İyi akşamlar", examples: ["Good evening, everyone."], grammar: "" },
-                    { english: "Good night", turkish: "İyi geceler", examples: ["Good night, sleep tight."], grammar: "" },
-                    { english: "How are you?", turkish: "Nasılsın?", examples: ["How are you, John?", "I'm fine, thank you."], grammar: "Soru sorma." },
-                    { english: "I am fine", turkish: "İyiyim", examples: ["I am fine, thank you.", "I am fine, how about you?"], grammar: "Kendini ifade etme: I am..." },
-                    { english: "What is your name?", turkish: "Adın ne?", examples: ["What is your name, please?", "My name is Lily."], grammar: "Soru sorma." },
-                    { english: "My name is...", turkish: "Benim adım...", examples: ["My name is Alex.", "My name is Daisy."], grammar: "Kendini tanıtma." },
-                    { english: "Nice to meet you", turkish: "Tanıştığıma memnun oldum", examples: ["Nice to meet you, too."], grammar: "" }
+                    { english: "Hello", turkish: "Merhaba", example_sentence: "Hello, my name is Alex.", turkish_example: "Merhaba, benim adım Alex.", grammar: "Selamlaşma ifadesi.", question_text: "What does 'Hello' mean?", question_highlight: "Hello" },
+                    { english: "Goodbye", turkish: "Güle güle", example_sentence: "Goodbye, see you tomorrow.", turkish_example: "Güle güle, yarın görüşürüz.", grammar: "Veda ifadesi.", question_text: "Translate 'Goodbye'.", question_highlight: "Goodbye" },
+                    { english: "Please", turkish: "Lütfen", example_sentence: "Please sit down.", turkish_example: "Lütfen oturun.", grammar: "Rica ederken kullanılır.", question_text: "If you want to ask kindly, you say 'Please'. What does 'Please' mean?", question_highlight: "Please" },
+                    { english: "Thank you", turkish: "Teşekkür ederim", example_sentence: "Thank you for your help.", turkish_example: "Yardımın için teşekkür ederim.", grammar: "Minnettarlık ifadesi.", question_text: "When someone helps you, you say 'Thank you'. What is 'Thank you' in Turkish?", question_highlight: "Thank you" },
+                    { english: "Yes", turkish: "Evet", example_sentence: "Yes, I can.", turkish_example: "Evet, yapabilirim.", grammar: "Onaylama.", question_text: "If the answer is positive, you say 'Yes'. What does 'Yes' mean?", question_highlight: "Yes" },
+                    { english: "No", turkish: "Hayır", example_sentence: "No, I cannot.", turkish_example: "Hayır, yapamam.", grammar: "Reddetme.", question_text: "If the answer is negative, you say 'No'. What does 'No' mean?", question_highlight: "No" },
+                    { english: "Good morning", turkish: "Günaydın", example_sentence: "Good morning, class.", turkish_example: "Günaydın, sınıf.", grammar: "Sabah selamı.", question_text: "What do you say in the morning? 'Good morning'. What is its Turkish meaning?", question_highlight: "Good morning" },
+                    { english: "How are you?", turkish: "Nasılsın?", example_sentence: "How are you, John?", turkish_example: "Nasılsın, John?", grammar: "Hal hatır sorma.", question_text: "How do you ask 'Nasılsın?' in English?", question_highlight: "Nasılsın?" },
+                    { english: "I am fine", turkish: "İyiyim", example_sentence: "I am fine, thank you.", turkish_example: "İyiyim, teşekkür ederim.", grammar: "Kendini ifade etme: I am...", question_text: "Translate 'I am fine'.", question_highlight: "I am fine" },
+                    { english: "What is your name?", turkish: "Adın ne?", example_sentence: "What is your name?", turkish_example: "Adın ne?", grammar: "Soru sorma.", question_text: "What do you say to ask someone's name?", question_highlight: "name" },
+                    { english: "My name is...", turkish: "Benim adım...", example_sentence: "My name is Alex.", turkish_example: "Benim adım Alex.", grammar: "Kendini tanıtma.", question_text: "How do you say 'Benim adım...' in English?", question_highlight: "Benim adım" },
+                    { english: "Nice to meet you", turkish: "Tanıştığıma memnun oldum", example_sentence: "Nice to meet you, too.", turkish_example: "Ben de tanıştığıma memnun oldum.", grammar: "Tanışma ifadesi.", question_text: "When you meet someone new, you say 'Nice to meet you'. What does it mean in Turkish?", question_highlight: "Nice to meet you" }
                 ]
             },
             {
-                name: "Numbers (1-20)",
+                name: "Numbers (1-10)",
                 words: [
-                    { english: "One", turkish: "Bir", examples: ["One apple.", "I have one brother."], grammar: "" },
-                    { english: "Two", turkish: "İki", examples: ["Two dogs.", "She has two sisters."], grammar: "" },
-                    { english: "Three", turkish: "Üç", examples: ["Three books.", "We are three friends."], grammar: "" },
-                    { english: "Four", turkish: "Dört", examples: ["Four cats.", "There are four chairs."], grammar: "" },
-                    { english: "Five", turkish: "Beş", examples: ["Five fingers.", "I see five birds."], grammar: "" },
-                    { english: "Six", turkish: "Altı", examples: ["Six pencils.", "They eat six cookies."], grammar: "" },
-                    { english: "Seven", turkish: "Yedi", examples: ["Seven days.", "He is seven years old."], grammar: "" },
-                    { english: "Eight", turkish: "Sekiz", examples: ["Eight toys.", "There are eight students."], grammar: "" },
-                    { english: "Nine", turkish: "Dokuz", examples: ["Nine flowers.", "She has nine marbles."], grammar: "" },
-                    { english: "Ten", turkish: "On", examples: ["Ten fingers and toes.", "We have ten books."], grammar: "" },
-                    { english: "Eleven", turkish: "On bir", examples: ["Eleven balloons."], grammar: "" },
-                    { english: "Twelve", turkish: "On iki", examples: ["Twelve months."], grammar: "" },
-                    { english: "Thirteen", turkish: "On üç", examples: ["Thirteen candies."], grammar: "" },
-                    { english: "Fourteen", turkish: "On dört", examples: ["Fourteen apples."], grammar: "" },
-                    { english: "Fifteen", turkish: "On beş", examples: ["Fifteen birds."], grammar: "" },
-                    { english: "Sixteen", turkish: "On altı", examples: ["Sixteen children."], grammar: "" },
-                    { english: "Seventeen", turkish: "On yedi", examples: ["Seventeen oranges."], grammar: "" },
-                    { english: "Eighteen", turkish: "On sekiz", examples: ["Eighteen stars."], grammar: "" },
-                    { english: "Nineteen", turkish: "On dokuz", examples: ["Nineteen pencils."], grammar: "" },
-                    { english: "Twenty", turkish: "Yirmi", examples: ["Twenty students in the class."], grammar: "" }
+                    { english: "One", turkish: "Bir", example_sentence: "One apple.", turkish_example: "Bir elma.", grammar: "", question_text: "What is the Turkish for 'One'?", question_highlight: "One" },
+                    { english: "Two", turkish: "İki", example_sentence: "Two dogs.", turkish_example: "İki köpek.", grammar: "", question_text: "If you have 2 pencils, what is 'Two' in Turkish?", question_highlight: "Two" },
+                    { english: "Three", turkish: "Üç", example_sentence: "Three books.", turkish_example: "Üç kitap.", grammar: "", question_text: "How do you say 'Üç' in English?", question_highlight: "Üç" },
+                    { english: "Four", turkish: "Dört", example_sentence: "Four cats.", turkish_example: "Dört kedi.", grammar: "", question_text: "What is 'Dört' in English?", question_highlight: "Dört" },
+                    { english: "Five", turkish: "Beş", example_sentence: "Five fingers.", turkish_example: "Beş parmak.", grammar: "", question_text: "Translate 'Beş'.", question_highlight: "Beş" },
+                    { english: "Six", turkish: "Altı", example_sentence: "Six pencils.", turkish_example: "Altı kalem.", grammar: "", question_text: "What is 'Altı' in English?", question_highlight: "Altı" },
+                    { english: "Seven", turkish: "Yedi", example_sentence: "Seven days.", turkish_example: "Yedi gün.", grammar: "", question_text: "How do you say 'Yedi' in English?", question_highlight: "Yedi" },
+                    { english: "Eight", turkish: "Sekiz", example_sentence: "Eight toys.", turkish_example: "Sekiz oyuncak.", grammar: "", question_text: "Translate 'Sekiz'.", question_highlight: "Sekiz" },
+                    { english: "Nine", turkish: "Dokuz", example_sentence: "Nine flowers.", turkish_example: "Dokuz çiçek.", grammar: "", question_text: "What does 'Nine' mean?", question_highlight: "Nine" },
+                    { english: "Ten", turkish: "On", example_sentence: "Ten fingers.", turkish_example: "On parmak.", grammar: "", question_text: "What is the Turkish for 'Ten'?", question_highlight: "Ten" }
                 ]
             },
             {
                 name: "Colors",
                 words: [
-                    { english: "Red", turkish: "Kırmızı", examples: ["The apple is red.", "I like red cars."], grammar: "" },
-                    { english: "Blue", turkish: "Mavi", examples: ["The sky is blue.", "My favorite color is blue."], grammar: "" },
-                    { english: "Green", turkish: "Yeşil", examples: ["The grass is green.", "I have a green ball."], grammar: "" },
-                    { english: "Yellow", turkish: "Sarı", examples: ["The sun is yellow.", "I see a yellow flower."], grammar: "" },
-                    { english: "Black", turkish: "Siyah", examples: ["My cat is black.", "The night is black."], grammar: "" },
-                    { english: "White", turkish: "Beyaz", examples: ["The snow is white.", "I have a white shirt."], grammar: "" },
-                    { english: "Orange", turkish: "Turuncu", examples: ["The orange is orange.", "I like orange juice."], grammar: "" },
-                    { english: "Purple", turkish: "Mor", examples: ["This flower is purple.", "She likes purple dresses."], grammar: "" },
-                    { english: "Pink", turkish: "Pembe", examples: ["My bag is pink.", "She has a pink toy."], grammar: "" },
-                    { english: "Brown", turkish: "Kahverengi", examples: ["The tree is brown.", "My shoes are brown."], grammar: "" },
-                    { english: "Grey", turkish: "Gri", examples: ["The elephant is grey.", "The clouds are grey."], grammar: "" }
+                    { english: "Red", turkish: "Kırmızı", example_sentence: "The apple is red.", turkish_example: "Elma kırmızıdır.", grammar: "", question_text: "The color of an apple can be 'Red'. What is 'Red' in Turkish?", question_highlight: "Red" },
+                    { english: "Blue", turkish: "Mavi", example_sentence: "The sky is blue.", turkish_example: "Gökyüzü mavidir.", grammar: "", question_text: "What color is the sky? It is 'Blue'. Translate 'Blue'.", question_highlight: "Blue" },
+                    { english: "Green", turkish: "Yeşil", example_sentence: "The grass is green.", turkish_example: "Çim yeşildir.", grammar: "", question_text: "What is 'Yeşil' in English?", question_highlight: "Yeşil" },
+                    { english: "Yellow", turkish: "Sarı", example_sentence: "The sun is yellow.", turkish_example: "Güneş sarıdır.", grammar: "", question_text: "Translate 'Sarı'.", question_highlight: "Sarı" },
+                    { english: "Black", turkish: "Siyah", example_sentence: "My cat is black.", turkish_example: "Kedim siyahtır.", grammar: "", question_text: "What does 'Black' mean?", question_highlight: "Black" },
+                    { english: "White", turkish: "Beyaz", example_sentence: "The snow is white.", turkish_example: "Kar beyazdır.", grammar: "", question_text: "Translate 'Beyaz'.", question_highlight: "Beyaz" },
+                    { english: "Orange", turkish: "Turuncu", example_sentence: "The orange is orange.", turkish_example: "Portakal turuncudur.", grammar: "", question_text: "What is 'Turuncu' in English?", question_highlight: "Turuncu" },
+                    { english: "Pink", turkish: "Pembe", example_sentence: "My bag is pink.", turkish_example: "Çantam pembedir.", grammar: "", question_text: "Translate 'Pembe'.", question_highlight: "Pembe" }
                 ]
             },
             {
                 name: "Family Members",
                 words: [
-                    { english: "Family", turkish: "Aile", examples: ["I love my family.", "We are a happy family."], grammar: "" },
-                    { english: "Mother", turkish: "Anne", examples: ["My mother is kind.", "She is my mother."], grammar: "" },
-                    { english: "Father", turkish: "Baba", examples: ["My father is strong.", "He is my father."], grammar: "" },
-                    { english: "Brother", turkish: "Erkek kardeş", examples: ["I have one brother.", "My brother is tall."], grammar: "" },
-                    { english: "Sister", turkish: "Kız kardeş", examples: ["She has two sisters.", "My sister is short."], grammar: "" },
-                    { english: "Grandfather", turkish: "Büyükbaba", examples: ["My grandfather is old.", "He visits us."], grammar: "" },
-                    { english: "Grandmother", turkish: "Büyükanne", examples: ["My grandmother bakes cookies.", "She tells stories."], grammar: "" },
-                    { english: "Son", turkish: "Erkek evlat", examples: ["He is my son.", "They have a son."], grammar: "" },
-                    { english: "Daughter", turkish: "Kız evlat", examples: ["She is my daughter.", "They have a daughter."], grammar: "" }
+                    { english: "Mother", turkish: "Anne", example_sentence: "My mother is kind.", turkish_example: "Annem naziktir.", grammar: "", question_text: "Your female parent is your 'Mother'. What is 'Mother' in Turkish?", question_highlight: "Mother" },
+                    { english: "Father", turkish: "Baba", example_sentence: "My father is strong.", turkish_example: "Babam güçlüdür.", grammar: "", question_text: "Your male parent is your 'Father'. What does 'Father' mean?", question_highlight: "Father" },
+                    { english: "Brother", turkish: "Erkek kardeş", example_sentence: "I have one brother.", turkish_example: "Bir erkek kardeşim var.", grammar: "", question_text: "How do you say 'Erkek kardeş' in English?", question_highlight: "Erkek kardeş" },
+                    { english: "Sister", turkish: "Kız kardeş", example_sentence: "She has two sisters.", turkish_example: "İki kız kardeşi var.", grammar: "", question_text: "Translate 'Kız kardeş'.", question_highlight: "Kız kardeş" },
+                    { english: "Family", turkish: "Aile", example_sentence: "I love my family.", turkish_example: "Ailemi seviyorum.", grammar: "", question_text: "What is 'Aile' in English?", question_highlight: "Aile" }
                 ]
             },
             {
                 name: "Animals",
                 words: [
-                    { english: "Cat", turkish: "Kedi", examples: ["I have a cat.", "The cat sleeps a lot."], grammar: "" },
-                    { english: "Dog", turkish: "Köpek", examples: ["My dog is playful.", "Dogs bark."], grammar: "" },
-                    { english: "Bird", turkish: "Kuş", examples: ["A bird is singing.", "Birds can fly."], grammar: "" },
-                    { english: "Fish", turkish: "Balık", examples: ["I like to eat fish.", "Fish live in water."], grammar: "" },
-                    { english: "Elephant", turkish: "Fil", examples: ["An elephant is big.", "Elephants have long noses."], grammar: "" },
-                    { english: "Lion", turkish: "Aslan", examples: ["A lion is a wild animal.", "Lions roar."], grammar: "" },
-                    { english: "Tiger", turkish: "Kaplan", examples: ["Tigers are fast.", "I saw a tiger at the zoo."], grammar: "" },
-                    { english: "Monkey", turkish: "Maymun", examples: ["Monkeys like bananas.", "Monkeys can climb trees."], grammar: "" },
-                    { english: "Bear", turkish: "Ayı", examples: ["Bears sleep in winter.", "A bear is a big animal."], grammar: "" },
-                    { english: "Rabbit", turkish: "Tavşan", examples: ["A rabbit eats carrots.", "Rabbits are fast."], grammar: "" }
+                    { english: "Cat", turkish: "Kedi", example_sentence: "I have a cat.", turkish_example: "Bir kedim var.", grammar: "", question_text: "What is 'Kedi' in English?", question_highlight: "Kedi" },
+                    { english: "Dog", turkish: "Köpek", example_sentence: "My dog is playful.", turkish_example: "Köpeğim oyunbazdır.", grammar: "", question_text: "What does 'Dog' mean in Turkish?", question_highlight: "Dog" },
+                    { english: "Bird", turkish: "Kuş", example_sentence: "A bird is singing.", turkish_example: "Bir kuş şarkı söylüyor.", grammar: "", question_text: "Translate 'Kuş'.", question_highlight: "Kuş" },
+                    { english: "Fish", turkish: "Balık", example_sentence: "Fish live in water.", turkish_example: "Balıklar suda yaşar.", grammar: "", question_text: "What is 'Balık' in English?", question_highlight: "Balık" },
+                    { english: "Lion", turkish: "Aslan", example_sentence: "A lion is a wild animal.", turkish_example: "Aslan vahşi bir hayvandır.", grammar: "", question_text: "What does 'Lion' mean?", question_highlight: "Lion" }
                 ]
             },
             {
                 name: "Food & Drinks",
                 words: [
-                    { english: "Food", turkish: "Yemek", examples: ["I like healthy food.", "What's your favorite food?"], grammar: "" },
-                    { english: "Water", turkish: "Su", examples: ["Drink water every day.", "I need a glass of water."], grammar: "" },
-                    { english: "Milk", turkish: "Süt", examples: ["I drink milk every morning.", "Milk is good for bones."], grammar: "" },
-                    { english: "Bread", turkish: "Ekmek", examples: ["I eat bread with cheese.", "Can you buy some bread?"], grammar: "" },
-                    { english: "Apple", turkish: "Elma", examples: ["An apple a day keeps the doctor away.", "I like red apples."], grammar: "" },
-                    { english: "Banana", turkish: "Muz", examples: ["Monkeys like bananas.", "I eat a banana for breakfast."], grammar: "" },
-                    { english: "Orange", turkish: "Portakal", examples: ["Oranges are juicy.", "I drink orange juice."], grammar: "" },
-                    { english: "Chicken", turkish: "Tavuk", examples: ["I like fried chicken.", "We eat chicken for dinner."], grammar: "" },
-                    { english: "Fish", turkish: "Balık", examples: ["I eat fish on Fridays.", "Fish is healthy."], grammar: "" },
-                    { english: "Rice", turkish: "Pirinç", examples: ["I like rice with chicken.", "Do you eat rice?"], grammar: "" }
+                    { english: "Apple", turkish: "Elma", example_sentence: "I like red apples.", turkish_example: "Kırmızı elmaları severim.", grammar: "", question_text: "What is 'Elma' in English?", question_highlight: "Elma" },
+                    { english: "Banana", turkish: "Muz", example_sentence: "I eat a banana for breakfast.", turkish_example: "Kahvaltıda bir muz yerim.", grammar: "", question_text: "Translate 'Muz'.", question_highlight: "Muz" },
+                    { english: "Water", turkish: "Su", example_sentence: "Drink water every day.", turkish_example: "Her gün su iç.", grammar: "", question_text: "What is 'Su' in English?", question_highlight: "Su" },
+                    { english: "Milk", turkish: "Süt", example_sentence: "I drink milk every morning.", turkish_example: "Her sabah süt içerim.", grammar: "", question_text: "What does 'Milk' mean?", question_highlight: "Milk" },
+                    { english: "Bread", turkish: "Ekmek", example_sentence: "I eat bread with cheese.", turkish_example: "Peynirle ekmek yerim.", grammar: "", question_text: "Translate 'Ekmek'.", question_highlight: "Ekmek" },
+                    { english: "Chicken", turkish: "Tavuk", example_sentence: "I like fried chicken.", turkish_example: "Kızarmış tavuk severim.", grammar: "", question_text: "What is 'Tavuk' in English?", question_highlight: "Tavuk" }
                 ]
             },
             {
                 name: "Body Parts",
                 words: [
-                    { english: "Head", turkish: "Kafa", examples: ["I have a head.", "My head hurts."], grammar: "" },
-                    { english: "Eye", turkish: "Göz", examples: ["I have two eyes.", "My eyes are blue."], grammar: "" },
-                    { english: "Nose", turkish: "Burun", examples: ["I have one nose.", "My nose is small."], grammar: "" },
-                    { english: "Ear", turkish: "Kulak", examples: ["I have two ears.", "Listen with your ears."], grammar: "" },
-                    { english: "Mouth", turkish: "Ağız", examples: ["Open your mouth.", "I eat with my mouth."], grammar: "" },
-                    { english: "Arm", turkish: "Kol", examples: ["I have two arms.", "Lift your arms."], grammar: "" },
-                    { english: "Hand", turkish: "El", examples: ["I have two hands.", "Wash your hands."], grammar: "" },
-                    { english: "Finger", turkish: "Parmak", examples: ["I have ten fingers.", "Point with your finger."], grammar: "" },
-                    { english: "Leg", turkish: "Bacak", examples: ["I have two legs.", "Run with your legs."], grammar: "" },
-                    { english: "Foot", turkish: "Ayak", examples: ["I have two feet.", "Wear shoes on your feet."], grammar: "" }
+                    { english: "Head", turkish: "Kafa", example_sentence: "My head hurts.", turkish_example: "Başım ağrıyor.", grammar: "", question_text: "What does 'Head' mean?", question_highlight: "Head" },
+                    { english: "Eye", turkish: "Göz", example_sentence: "I have two eyes.", turkish_example: "İki gözüm var.", grammar: "", question_text: "How do you say 'Göz' in English?", question_highlight: "Göz" },
+                    { english: "Nose", turkish: "Burun", example_sentence: "My nose is small.", turkish_example: "Burnum küçük.", grammar: "", question_text: "What is 'Burun' in English?", question_highlight: "Burun" },
+                    { english: "Ear", turkish: "Kulak", example_sentence: "Listen with your ears.", turkish_example: "Kulaklarınla dinle.", grammar: "", question_text: "What does 'Ear' mean?", question_highlight: "Ear" },
+                    { english: "Mouth", turkish: "Ağız", example_sentence: "Open your mouth.", turkish_example: "Ağzını aç.", grammar: "", question_text: "What is 'Ağız' in English?", question_highlight: "Ağız" },
+                    { english: "Hand", turkish: "El", example_sentence: "Wash your hands.", turkish_example: "Ellerini yıka.", grammar: "", question_text: "Translate 'El'.", question_highlight: "El" },
+                    { english: "Foot", turkish: "Ayak", example_sentence: "I have two feet.", turkish_example: "İki ayağım var.", grammar: "", question_text: "What does 'Foot' mean?", question_highlight: "Foot" }
                 ]
             },
             {
                 name: "Classroom Objects",
                 words: [
-                    { english: "Book", turkish: "Kitap", examples: ["I read a book.", "This is my book."], grammar: "" },
-                    { english: "Pencil", turkish: "Kurşun kalem", examples: ["I write with a pencil.", "Give me your pencil."], grammar: "" },
-                    { english: "Pen", turkish: "Tükenmez kalem", examples: ["This is a blue pen.", "I need a pen."], grammar: "" },
-                    { english: "Eraser", turkish: "Silgi", examples: ["I use an eraser.", "Don't forget your eraser."], grammar: "" },
-                    { english: "Ruler", turkish: "Cetvel", examples: ["Use a ruler to draw a line.", "My ruler is long."], grammar: "" },
-                    { english: "Bag", turkish: "Çanta", examples: ["This is my school bag.", "Put your books in your bag."], grammar: "" },
-                    { english: "Chair", turkish: "Sandalye", examples: ["Sit on the chair.", "The chair is red."], grammar: "" },
-                    { english: "Table", turkish: "Masa", examples: ["Put the book on the table.", "We study at the table."], grammar: "" },
-                    { english: "Board", turkish: "Tahta", examples: ["The teacher writes on the board.", "Look at the board."], grammar: "" },
-                    { english: "Window", turkish: "Pencere", examples: ["Open the window.", "The window is clean."], grammar: "" },
-                    { english: "Door", turkish: "Kapı", examples: ["Close the door.", "The door is open."], grammar: "" }
+                    { english: "Book", turkish: "Kitap", example_sentence: "I read a book.", turkish_example: "Bir kitap okurum.", grammar: "", question_text: "What is 'Kitap' in English?", question_highlight: "Kitap" },
+                    { english: "Pencil", turkish: "Kurşun kalem", example_sentence: "I write with a pencil.", turkish_example: "Kurşun kalemle yazarım.", grammar: "", question_text: "Translate 'Kurşun kalem'.", question_highlight: "Kurşun kalem" },
+                    { english: "Pen", turkish: "Tükenmez kalem", example_sentence: "This is a blue pen.", turkish_example: "Bu mavi bir tükenmez kalemdir.", grammar: "", question_text: "What does 'Pen' mean?", question_highlight: "Pen" },
+                    { english: "Chair", turkish: "Sandalye", example_sentence: "Sit on the chair.", turkish_example: "Sandalyeye otur.", grammar: "", question_text: "What is 'Sandalye' in English?", question_highlight: "Sandalye" },
+                    { english: "Table", turkish: "Masa", example_sentence: "Put the book on the table.", turkish_example: "Kitabı masanın üzerine koy.", grammar: "", question_text: "Translate 'Masa'.", question_highlight: "Masa" }
                 ]
             },
             {
                 name: "Action Verbs",
                 words: [
-                    { english: "Run", turkish: "Koşmak", examples: ["I can run fast.", "Let's run together."], grammar: "" },
-                    { english: "Walk", turkish: "Yürümek", examples: ["I walk to school.", "Let's go for a walk."], grammar: "" },
-                    { english: "Eat", turkish: "Yemek yemek", examples: ["I eat an apple.", "What do you want to eat?"], grammar: "" },
-                    { english: "Drink", turkish: "İçmek", examples: ["I drink water.", "Do you drink milk?"], grammar: "" },
-                    { english: "Sleep", turkish: "Uyumak", examples: ["I sleep at night.", "Cats sleep a lot."], grammar: "" },
-                    { english: "Play", turkish: "Oynamak", examples: ["I play with my friends.", "Let's play a game."], grammar: "" },
-                    { english: "Read", turkish: "Okumak", examples: ["I read a book.", "Can you read this?"], grammar: "" },
-                    { english: "Write", turkish: "Yazmak", examples: ["I write my name.", "Write a letter."], grammar: "" },
-                    { english: "Sing", turkish: "Şarkı söylemek", examples: ["I like to sing.", "Can you sing a song?"], grammar: "" },
-                    { english: "Draw", turkish: "Çizmek", examples: ["I draw a cat.", "Let's draw a picture."], grammar: "" },
-                    { english: "Jump", turkish: "Zıplamak", examples: ["Rabbits can jump.", "Jump high!"], grammar: "" },
-                    { english: "Sit", turkish: "Oturmak", examples: ["Sit down, please.", "I sit on the chair."], grammar: "" },
-                    { english: "Stand", turkish: "Ayakta durmak", examples: ["Stand up, please.", "I stand next to the table."], grammar: "" }
+                    { english: "Run", turkish: "Koşmak", example_sentence: "I can run fast.", turkish_example: "Hızlı koşabilirim.", grammar: "", question_text: "What does 'Run' mean?", question_highlight: "Run" },
+                    { english: "Walk", turkish: "Yürümek", example_sentence: "I walk to school.", turkish_example: "Okula yürürüm.", grammar: "", question_text: "Translate 'Yürümek'.", question_highlight: "Yürümek" },
+                    { english: "Eat", turkish: "Yemek yemek", example_sentence: "I eat an apple.", turkish_example: "Bir elma yerim.", grammar: "", question_text: "What is 'Yemek yemek' in English?", question_highlight: "Yemek yemek" },
+                    { english: "Drink", turkish: "İçmek", example_sentence: "I drink water.", turkish_example: "Su içerim.", grammar: "", question_text: "What does 'Drink' mean?", question_highlight: "Drink" },
+                    { english: "Sleep", turkish: "Uyumak", example_sentence: "I sleep at night.", turkish_example: "Geceleri uyurum.", grammar: "", question_text: "Translate 'Uyumak'.", question_highlight: "Uyumak" },
+                    { english: "Play", turkish: "Oynamak", example_sentence: "I play with my friends.", turkish_example: "Arkadaşlarımla oynarım.", grammar: "", question_text: "What is 'Oynamak' in English?", question_highlight: "Oynamak" },
+                    { english: "Read", turkish: "Okumak", example_sentence: "I read a book.", turkish_example: "Bir kitap okurum.", grammar: "", question_text: "What does 'Read' mean?", question_highlight: "Read" },
+                    { english: "Write", turkish: "Yazmak", example_sentence: "I write my name.", turkish_example: "Adımı yazarım.", grammar: "", question_text: "Translate 'Yazmak'.", question_highlight: "Yazmak" }
                 ]
             },
             {
                 name: "Simple Sentences & Questions",
                 words: [
-                    { english: "This is...", turkish: "Bu...", examples: ["This is a book.", "This is my friend."], grammar: "'This is' tekil nesneleri göstermek için kullanılır." },
-                    { english: "That is...", turkish: "Şu...", examples: ["That is a car.", "That is my house."], grammar: "'That is' uzaktaki tekil nesneleri göstermek için kullanılır." },
-                    { english: "These are...", turkish: "Bunlar...", examples: ["These are my pencils.", "These are apples."], grammar: "'These are' yakınındaki çoğul nesneleri göstermek için kullanılır." },
-                    { english: "Those are...", turkish: "Şunlar...", examples: ["Those are birds.", "Those are big trees."], grammar: "'Those are' uzaktaki çoğul nesneleri göstermek için kullanılır." },
-                    { english: "What is this?", turkish: "Bu nedir?", examples: ["What is this? It is a pen."], grammar: "Soru sorma: 'What' (ne) nesneler için kullanılır." },
-                    { english: "What is that?", turkish: "Şu nedir?", examples: ["What is that? It is a dog."], grammar: "" },
-                    { english: "Is it a cat?", turkish: "Bu bir kedi mi?", examples: ["Is it a cat? Yes, it is.", "Is it a cat? No, it isn't."], grammar: "Evet/Hayır soruları: 'Is it...?'" },
-                    { english: "Are you happy?", turkish: "Mutlu musun?", examples: ["Are you happy? Yes, I am.", "Are you happy? No, I'm not."], grammar: "Evet/Hayır soruları: 'Are you...?'" },
-                    { english: "I like...", turkish: "Seviyorum...", examples: ["I like apples.", "I like to play football."], grammar: "'Like' bir şeyi sevdiğini belirtmek için kullanılır." },
-                    { english: "I don't like...", turkish: "Sevmiyorum...", examples: ["I don't like spiders.", "I don't like running."], grammar: "'Don't like' bir şeyi sevmediğini belirtmek için kullanılır." },
-                    { english: "Can I...?", turkish: "...abilir miyim?", examples: ["Can I help you?", "Can I go to the restroom?"], grammar: "'Can' bir yeteneği veya izin istemeyi belirtir." },
-                    { english: "I can...", turkish: "Yapabilirim...", examples: ["I can swim.", "I can read a book."], grammar: "'Can' bir şeyi yapabilme yeteneğini belirtir." },
-                    { english: "I have...", turkish: "Sahibim...", examples: ["I have a brother.", "I have a new toy."], grammar: "'Have' sahip olmak fiilidir." },
-                    { english: "She has...", turkish: "Onun var...", examples: ["She has a cat.", "My sister has long hair."], grammar: "'He/She/It' ile 'has' kullanılır." }
+                    { english: "This is...", turkish: "Bu...", example_sentence: "This is a book.", turkish_example: "Bu bir kitaptır.", grammar: "'This is' tekil nesneleri göstermek için kullanılır.", question_text: "If you point to a book and say 'This is a book', what is the Turkish for 'This is'?", question_highlight: "This is" },
+                    { english: "What is this?", turkish: "Bu nedir?", example_sentence: "What is this? It is a pen.", turkish_example: "Bu nedir? O bir kalemdir.", grammar: "Soru sorma: 'What' (ne) nesneler için kullanılır.", question_text: "How do you ask 'Bu nedir?' in English?", question_highlight: "Bu nedir?" },
+                    { english: "Is it a cat?", turkish: "Bu bir kedi mi?", example_sentence: "Is it a cat? Yes, it is.", turkish_example: "Bu bir kedi mi? Evet, öyledir.", grammar: "Evet/Hayır soruları: 'Is it...?'", question_text: "If you ask 'Is it a cat?', what is the Turkish meaning?", question_highlight: "Is it a cat?" },
+                    { english: "I like...", turkish: "Seviyorum...", example_sentence: "I like apples.", turkish_example: "Elmaları severim.", grammar: "'Like' bir şeyi sevdiğini belirtmek için kullanılır.", question_text: "How do you say 'Elmaları seviyorum' in English?", question_highlight: "Seviyorum" },
+                    { english: "I can...", turkish: "Yapabilirim...", example_sentence: "I can swim.", turkish_example: "Yüzebilirim.", grammar: "'Can' bir şeyi yapabilme yeteneğini belirtir.", question_text: "What does 'I can swim' mean?", question_highlight: "I can swim" },
+                    { english: "I have...", turkish: "Sahibim...", example_sentence: "I have a brother.", turkish_example: "Bir erkek kardeşim var.", grammar: "'Have' sahip olmak fiilidir.", question_text: "What does 'I have a brother' mean?", question_highlight: "I have a brother" }
                 ]
             }
         ];
@@ -923,7 +913,10 @@
         function loadWordForLearning() {
             if (!currentTopicWords || currentTopicWords.length === 0) {
                 document.getElementById('english-word').innerText = "Bu konuda kelime yok.";
-                document.getElementById('turkish-meaning').innerHTML = "";
+                document.getElementById('meaning-text').innerText = "";
+                document.getElementById('example-sentence-text').innerText = "";
+                document.getElementById('example-sentence-turkish').innerText = "";
+                document.getElementById('grammar-tips').innerText = "";
                 return;
             }
 
@@ -934,13 +927,17 @@
             document.getElementById('english-word').innerText = wordData.english;
             document.getElementById('meaning-text').innerText = wordData.turkish;
 
-            const exampleSentencesDiv = document.getElementById('example-sentences');
-            exampleSentencesDiv.innerHTML = '';
-            if (wordData.examples && wordData.examples.length > 0) {
-                exampleSentencesDiv.innerHTML += '<br><b>Örnek Cümleler:</b>';
-                wordData.examples.forEach(ex => {
-                    exampleSentencesDiv.innerHTML += `<br>${ex}`;
-                });
+            // Örnek cümle ve Türkçe anlamı
+            const exampleSentenceTextDiv = document.getElementById('example-sentence-text');
+            const exampleSentenceTurkishDiv = document.getElementById('example-sentence-turkish');
+            exampleSentenceTextDiv.innerText = '';
+            exampleSentenceTurkishDiv.innerText = '';
+
+            if (wordData.example_sentence) {
+                exampleSentenceTextDiv.innerHTML = `<br><b>Örnek Cümle:</b><br>${wordData.example_sentence}`;
+                if (wordData.turkish_example) {
+                    exampleSentenceTurkishDiv.innerHTML = `(${wordData.turkish_example})`;
+                }
             }
 
             const grammarTipsDiv = document.getElementById('grammar-tips');
@@ -982,7 +979,7 @@
         let testQuestions = [];
         let currentQuestionIndex = 0;
         let score = 0;
-        const numberOfQuestionsInTest = 15; // Testteki toplam soru sayısı (istersek artırılabilir)
+        const numberOfQuestionsInTest = 10; // Testteki toplam soru sayısı
 
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -1003,13 +1000,27 @@
 
         function generateTestQuestions() {
             const allWords = getAllWordsForTest();
-            if (allWords.length < numberOfQuestionsInTest) {
-                console.warn("Test için yeterli kelime yok. Mevcut tüm kelimeler kullanılacak.");
-                testQuestions = shuffleArray([...allWords]).map(word => createQuestion(word, allWords));
-            } else {
-                const selectedWordsForTest = shuffleArray([...allWords]).slice(0, numberOfQuestionsInTest);
-                testQuestions = selectedWordsForTest.map(word => createQuestion(word, allWords));
+            if (allWords.length === 0) {
+                console.warn("Test için hiç kelime bulunamadı.");
+                testQuestions = [];
+                return;
             }
+
+            // Test için yeterli benzersiz kelime seç
+            let uniqueWords = [];
+            let tempAllWords = shuffleArray([...allWords]);
+            for (let i = 0; i < tempAllWords.length && uniqueWords.length < numberOfQuestionsInTest; i++) {
+                if (!uniqueWords.some(uw => uw.english === tempAllWords[i].english)) { // Tekrar eden kelime olmasın
+                    uniqueWords.push(tempAllWords[i]);
+                }
+            }
+
+            // Eğer seçilen kelime sayısı istenen adetten azsa, mevcut tüm kelimeleri kullan
+            if (uniqueWords.length < numberOfQuestionsInTest) {
+                console.warn(`Test için yeterli kelime (${numberOfQuestionsInTest}) bulunamadı. ${uniqueWords.length} kelime ile test oluşturuluyor.`);
+            }
+            
+            testQuestions = uniqueWords.map(word => createQuestion(word, allWords));
         }
 
         function createQuestion(correctWord, allWords) {
@@ -1027,15 +1038,18 @@
             }
             
             // Eğer hala 3 yanlış seçenek yoksa (çok az kelime varsa), aynı şıkkı tekrar eklemekten kaçınarak doldur
-            while (incorrectTurkishOptions.length < 3) {
+            // Benzersiz kelime listesi çok kısa ise bu döngü sonsuz döngüye girebilir.
+            // Bu durumu engellemek için ek kontrol.
+            while (incorrectTurkishOptions.length < 3 && allWords.length > incorrectTurkishOptions.length + 1) {
                  const randomTurkish = allWords[Math.floor(Math.random() * allWords.length)].turkish;
                  if (randomTurkish !== correctTurkishOption && !incorrectTurkishOptions.includes(randomTurkish)) {
                      incorrectTurkishOptions.push(randomTurkish);
-                 } else if (allWords.length <= 1) { // Eğer tek kelime varsa döngüden çık
-                    break;
                  }
             }
-
+            // Eğer hala 3 yanlış seçenek yoksa ve eklenemiyorsa, mevcutlarla devam et
+            if (incorrectTurkishOptions.length < 3) {
+                console.warn(`Soru için yeterli sayıda farklı yanlış seçenek oluşturulamadı: ${correctWord.english}`);
+            }
 
             const options = [...incorrectTurkishOptions.slice(0, 3), correctTurkishOption]; // En fazla 3 yanlış + 1 doğru
             shuffleArray(options); // Şıkları karıştır
@@ -1043,7 +1057,9 @@
             return {
                 word: correctWord, // İngilizce kelimeyi ve tüm detaylarını içerir
                 options: options, // Türkçe şıklar
-                correctAnswer: correctTurkishOption // Doğru Türkçe kelime
+                correctAnswer: correctTurkishOption, // Doğru Türkçe kelime
+                questionText: correctWord.question_text || `What does '${correctWord.english}' mean?`, // Yeni soru metni
+                questionHighlight: correctWord.question_highlight || correctWord.english // Vurgulanacak kelime
             };
         }
 
@@ -1055,8 +1071,6 @@
             loadCurrentQuestion();
             updateProgress();
             enableOptions();
-            document.getElementById('prev-test-btn').disabled = true;
-            document.getElementById('next-test-btn').innerText = "Cevapla ve İlerle ➡️";
             document.getElementById('test-feedback').innerText = '';
         }
 
@@ -1065,10 +1079,32 @@
             document.getElementById('test-feedback').innerText = '';
             selectedAnswerValue = null;
 
-            if (currentQuestionIndex < numberOfQuestionsInTest) {
+            if (currentQuestionIndex < testQuestions.length) { // testQuestions.length kontrolü önemli
                 const question = testQuestions[currentQuestionIndex];
-                document.getElementById('test-english-word').innerText = question.word.english;
-                playCurrentTestWordSound(); // Sadece test kelimesini seslendir
+                
+                // Soru metnini yükle ve vurgulama yap
+                const questionTextElement = document.getElementById('test-question-text');
+                const fullQuestion = question.questionText;
+                const highlightWord = question.questionHighlight;
+
+                if (fullQuestion.includes(highlightWord)) {
+                    const parts = fullQuestion.split(new RegExp(`(${highlightWord})`, 'gi'));
+                    questionTextElement.innerHTML = '';
+                    parts.forEach(part => {
+                        if (part.toLowerCase() === highlightWord.toLowerCase()) {
+                            const span = document.createElement('span');
+                            span.className = 'question-word';
+                            span.innerText = part;
+                            questionTextElement.appendChild(span);
+                        } else {
+                            questionTextElement.appendChild(document.createTextNode(part));
+                        }
+                    });
+                } else {
+                    questionTextElement.innerText = fullQuestion;
+                }
+
+                playCurrentTestQuestionSound(); // Soru cümlesini seslendir
                 
                 const optionsDiv = document.getElementById('test-options');
                 optionsDiv.innerHTML = '';
@@ -1080,8 +1116,6 @@
                     optionsDiv.appendChild(button);
                 });
                 
-                document.getElementById('prev-test-btn').disabled = currentQuestionIndex === 0;
-                document.getElementById('next-test-btn').innerText = "Cevapla ve İlerle ➡️";
                 enableOptions();
                 resetOptionStyles();
             } else {
@@ -1096,33 +1130,21 @@
             });
         }
 
-        // Test bölümündeki kelimenin seslendirilmesi
-        function playCurrentTestWordSound() {
+        // Test bölümündeki soru cümlesinin seslendirilmesi
+        function playCurrentTestQuestionSound() {
             if (testQuestions && testQuestions.length > currentQuestionIndex) {
-                speakText(testQuestions[currentQuestionIndex].word.english);
+                // Soru metnini seslendir
+                speakText(testQuestions[currentQuestionIndex].questionText);
             }
         }
 
         let selectedAnswerValue = null;
 
         function selectAnswer(answer) {
+            // Sadece bir kere cevap seçilebilmesini sağlamak için kontrol
+            if (selectedAnswerValue !== null) return; 
+
             selectedAnswerValue = answer;
-            const options = document.querySelectorAll('#test-options button');
-            options.forEach(button => {
-                button.classList.remove('selected');
-            });
-            const clickedButton = Array.from(options).find(button => button.innerText === answer);
-            if (clickedButton) {
-                clickedButton.classList.add('selected');
-            }
-        }
-
-        function checkAnswerAndNext() {
-            if (selectedAnswerValue === null) {
-                showFeedback('Lütfen bir cevap seçin!', 'incorrect', 'test-feedback', 1000);
-                return;
-            }
-
             const currentQuestion = testQuestions[currentQuestionIndex];
             const isCorrect = selectedAnswerValue === currentQuestion.correctAnswer;
 
@@ -1130,8 +1152,8 @@
             options.forEach(button => {
                 if (button.innerText === currentQuestion.correctAnswer) {
                     button.classList.add('correct');
-                } else if (button.innerText === selectedAnswerValue && !isCorrect) {
-                    button.classList.add('incorrect');
+                } else if (button.innerText === selectedAnswerValue) { // Doğru da olsa seçili butona selected class'ı ekliyor, bu kısmı düzelttim
+                    button.classList.add(isCorrect ? 'correct' : 'incorrect'); // Eğer doğruysa 'correct', değilse 'incorrect' ekle
                 }
                 button.disabled = true; // Cevaplandıktan sonra seçenekleri devre dışı bırak
             });
@@ -1143,8 +1165,6 @@
                 showFeedback(`Yanlış. Doğru cevap: ${currentQuestion.correctAnswer}`, 'incorrect', 'test-feedback');
             }
             
-            selectedAnswerValue = null;
-
             setTimeout(() => {
                 currentQuestionIndex++;
                 updateProgress();
@@ -1159,28 +1179,19 @@
             });
         }
 
-        function previousTestQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                loadCurrentQuestion();
-                updateProgress();
-            }
-            document.getElementById('test-feedback').innerText = '';
-        }
-
         function updateProgress() {
             const progressBar = document.getElementById('progress-bar');
-            const progress = ((currentQuestionIndex) / numberOfQuestionsInTest) * 100;
+            const progress = ((currentQuestionIndex) / testQuestions.length) * 100; // Toplam soru sayısını testQuestions.length ile al
             progressBar.style.width = `${progress}%`;
 
-            if (currentQuestionIndex >= numberOfQuestionsInTest) {
+            if (currentQuestionIndex >= testQuestions.length) {
                 showTestResults();
             }
         }
 
         function showTestResults() {
             document.getElementById('final-score').innerText = score;
-            document.getElementById('total-questions').innerText = numberOfQuestionsInTest;
+            document.getElementById('total-questions').innerText = testQuestions.length; // Toplam soru sayısı
             switchScreen('test-results');
         }
 
